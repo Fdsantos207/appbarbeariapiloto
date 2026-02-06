@@ -4,68 +4,89 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel do Parceiro</title>
-
+    
     <script>
-        const SENHA_MESTRE = "admin123"; // DEFINA SUA SENHA AQUI
+        const SENHA_MESTRE = "admin123"; 
         if (sessionStorage.getItem("logado") !== "sim") {
             const tentativa = prompt("🔒 Área Restrita.\nDigite a senha:");
-            if (tentativa === SENHA_MESTRE) {
-                sessionStorage.setItem("logado", "sim");
-            } else {
-                alert("Senha incorreta!");
-                window.location.href = "index.html";
-            }
+            if (tentativa === SENHA_MESTRE) sessionStorage.setItem("logado", "sim");
+            else { alert("Senha incorreta!"); window.location.href = "index.html"; }
         }
     </script>
 
     <style>
-        :root { --cor-fundo: #121212; --cor-card: #1e1e1e; --cor-destaque: #D4AF37; --verde-zap: #25D366; }
+        :root { --cor-fundo: #121212; --cor-card: #1e1e1e; --cor-destaque: #D4AF37; --verde-zap: #25D366; --cinza: #333; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-        body { background-color: var(--cor-fundo); color: #e0e0e0; padding: 20px; }
+        body { background-color: var(--cor-fundo); color: #e0e0e0; padding: 20px; padding-bottom: 80px; }
         
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 15px; }
-        h1 { font-size: 1.2rem; color: var(--cor-destaque); }
-        .voltar { color: #888; text-decoration: none; font-size: 0.9rem; }
+        /* Navegação em Abas */
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 15px; background: var(--cinza); color: #aaa; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .tab-btn.ativo { background: var(--cor-destaque); color: var(--cor-fundo); }
 
+        .conteudo-aba { display: none; }
+        .conteudo-aba.ativo { display: block; }
+
+        /* Estilos da Agenda */
         .painel-controle { background: var(--cor-card); padding: 15px; border-radius: 10px; margin-bottom: 20px; }
-        input[type="date"] { width: 100%; padding: 10px; background: #333; border: 1px solid #444; color: white; border-radius: 5px; margin-bottom: 15px; }
+        input[type="date"], input[type="number"], input[type="text"] { width: 100%; padding: 12px; background: #2a2a2a; border: 1px solid #444; color: white; border-radius: 5px; margin-bottom: 15px; }
         
-        .resumo-box { display: flex; justify-content: space-between; }
-        .resumo-item { text-align: center; width: 48%; background: #2a2a2a; padding: 10px; border-radius: 8px; }
-        .resumo-valor { font-size: 1.2rem; font-weight: bold; color: var(--cor-destaque); display: block; }
-
-        .card-cliente { 
-            background: var(--cor-card); padding: 15px; margin-bottom: 15px; border-radius: 8px; 
-            border-left: 5px solid var(--cor-destaque); display: flex; justify-content: space-between; align-items: center;
-        }
-        .info-horario { font-size: 1.3rem; font-weight: bold; margin-right: 15px; }
-        .info-dados h3 { font-size: 1rem; }
-        .info-dados p { color: #888; font-size: 0.9rem; }
+        /* Estilos da Configuração */
+        .form-group { margin-bottom: 20px; background: var(--cor-card); padding: 15px; border-radius: 10px; }
+        .form-group label { display: block; margin-bottom: 8px; color: var(--cor-destaque); font-size: 0.9rem; }
+        .lista-servicos-edit { display: flex; flex-direction: column; gap: 10px; }
+        .item-servico { display: flex; gap: 10px; }
+        .btn-salvar { width: 100%; padding: 15px; background: var(--verde-zap); border: none; border-radius: 8px; color: white; font-weight: bold; font-size: 1rem; cursor: pointer; }
+        
+        /* Cards da Agenda */
+        .card-cliente { background: var(--cor-card); padding: 15px; margin-bottom: 10px; border-radius: 8px; border-left: 5px solid var(--cor-destaque); display: flex; justify-content: space-between; align-items: center; }
         .btn-zap { background: var(--verde-zap); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 1.2rem; }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>Painel do Parceiro</h1>
-        <a href="index.html" class="voltar">⬅ Voltar</a>
-    </header>
+    <h2 style="text-align:center; margin-bottom:20px; color:var(--cor-destaque)">Painel Gerencial</h2>
 
-    <div class="painel-controle">
-        <label>Filtrar data:</label>
-        <input type="date" id="filtro-data">
-        <div class="resumo-box">
-            <div class="resumo-item"><span class="resumo-valor" id="total-clientes">0</span><small>Clientes</small></div>
-            <div class="resumo-item"><span class="resumo-valor" id="total-faturamento">R$ 0</span><small>Faturamento</small></div>
-        </div>
+    <div class="tabs">
+        <button class="tab-btn ativo" onclick="mudarAba('agenda')">📅 Agenda</button>
+        <button class="tab-btn" onclick="mudarAba('config')">⚙️ Configurar</button>
     </div>
 
-    <div id="container-lista"><p style="text-align:center">Carregando...</p></div>
+    <div id="aba-agenda" class="conteudo-aba ativo">
+        <div class="painel-controle">
+            <input type="date" id="filtro-data">
+            <p id="resumo-dia" style="text-align:center; font-weight:bold;">Carregando...</p>
+        </div>
+        <div id="container-lista"></div>
+    </div>
+
+    <div id="aba-config" class="conteudo-aba">
+        
+        <div class="form-group">
+            <label>Horário de Abertura (Hora)</label>
+            <input type="number" id="conf-inicio" placeholder="Ex: 9">
+            
+            <label>Horário de Fechamento (Hora)</label>
+            <input type="number" id="conf-fim" placeholder="Ex: 19">
+            
+            <label>Tempo por Corte (Minutos)</label>
+            <input type="number" id="conf-intervalo" placeholder="Ex: 45">
+        </div>
+
+        <div class="form-group">
+            <label>Serviços e Preços</label>
+            <div id="lista-servicos-inputs" class="lista-servicos-edit">
+                </div>
+            <button onclick="adicionarCampoServico()" style="margin-top:10px; background:#444; color:white; border:none; padding:8px; border-radius:5px; width:100%">+ Adicionar Serviço</button>
+        </div>
+
+        <button class="btn-salvar" onclick="salvarConfiguracoes()">SALVAR ALTERAÇÕES</button>
+    </div>
 
     <script type="module">
-        /* --- CONFIGURAÇÃO DO FIREBASE (SUBSTITUA AQUI IGUAL AO INDEX) --- */
+        /* --- FIREBASE CONFIG (COLE SUAS CHAVES AQUI) --- */
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, query, where, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "SUA_API_KEY_AQUI",
@@ -78,62 +99,124 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const ID_LOJA = "barbearia_central_01"; // ID Único da Loja
 
-        const ID_LOJA = "barbearia_central_01"; 
-        const PRECOS = { "Corte Cabelo": 35, "Barba Terapia": 25, "Combo Completo": 55 };
+        // --- LÓGICA DE ABAS ---
+        window.mudarAba = function(aba) {
+            document.querySelectorAll('.conteudo-aba').forEach(e => e.classList.remove('ativo'));
+            document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('ativo'));
+            document.getElementById(`aba-${aba}`).classList.add('ativo');
+            event.target.classList.add('ativo');
+        }
 
+        // --- CARREGAR AGENDA ---
         const inputData = document.getElementById('filtro-data');
-        const hoje = new Date().toISOString().split("T")[0];
-        inputData.value = hoje;
-        carregarAgenda(hoje);
+        inputData.value = new Date().toISOString().split("T")[0];
+        inputData.addEventListener('change', () => carregarAgenda());
+        carregarAgenda();
 
-        inputData.addEventListener('change', (e) => carregarAgenda(e.target.value));
-
-        async function carregarAgenda(data) {
+        async function carregarAgenda() {
+            const data = inputData.value;
             const container = document.getElementById('container-lista');
             container.innerHTML = '<p style="text-align:center">Buscando...</p>';
 
             const q = query(collection(db, "agendamentos"), where("loja_id", "==", ID_LOJA), where("data", "==", data));
             const snapshot = await getDocs(q);
             
-            let html = "", totalCli = 0, totalFat = 0;
+            let html = "";
+            let totalFat = 0;
             let lista = [];
 
             snapshot.forEach(doc => lista.push(doc.data()));
             lista.sort((a, b) => a.horario.localeCompare(b.horario));
 
-            if (lista.length === 0) {
-                container.innerHTML = '<p style="text-align:center; padding:20px; color:#555">Nenhum agendamento hoje.</p>';
-                atualizarResumo(0, 0); return;
-            }
-
+            // Para saber o preço, precisamos buscar a config atual ou usar o que foi salvo no agendamento
+            // Por simplicidade, vamos assumir que o preço está salvo no texto do serviço ou apenas listar
+            
+            if(lista.length === 0) container.innerHTML = '<p style="text-align:center; padding:20px; color:#555">Sem cortes hoje.</p>';
+            
             lista.forEach(item => {
-                totalCli++;
-                const valor = PRECOS[item.servico] || 0;
-                totalFat += valor;
+                // Remove caracteres não numéricos do zap
                 const zapLink = item.cliente_zap.replace(/\D/g, ''); 
-
                 html += `
                     <div class="card-cliente">
-                        <div style="display:flex; align-items:center">
-                            <div class="info-horario">${item.horario}</div>
-                            <div class="info-dados">
-                                <h3>${item.cliente_nome}</h3>
-                                <p>${item.servico} - R$ ${valor}</p>
-                            </div>
+                        <div>
+                            <span style="font-size:1.2rem; font-weight:bold; margin-right:10px">${item.horario}</span>
+                            <span>${item.cliente_nome}</span> <br>
+                            <small style="color:#888">${item.servico}</small>
                         </div>
                         <a href="https://wa.me/55${zapLink}" target="_blank" class="btn-zap">📱</a>
                     </div>
                 `;
             });
-
-            container.innerHTML = html;
-            atualizarResumo(totalCli, totalFat);
+            container.innerHTML = html || container.innerHTML;
+            document.getElementById('resumo-dia').innerText = `${lista.length} Clientes Hoje`;
         }
 
-        function atualizarResumo(c, f) {
-            document.getElementById('total-clientes').innerText = c;
-            document.getElementById('total-faturamento').innerText = `R$ ${f},00`;
+        // --- CARREGAR E SALVAR CONFIGURAÇÕES ---
+        const configRef = doc(db, "lojas", ID_LOJA);
+
+        async function carregarConfiguracoesAdmin() {
+            const docSnap = await getDoc(configRef);
+            if (docSnap.exists()) {
+                const dados = docSnap.data();
+                document.getElementById('conf-inicio').value = dados.horarioInicio;
+                document.getElementById('conf-fim').value = dados.horarioFim;
+                document.getElementById('conf-intervalo').value = dados.intervaloMinutos;
+                
+                // Preencher Serviços
+                const containerServ = document.getElementById('lista-servicos-inputs');
+                containerServ.innerHTML = '';
+                dados.servicos.forEach(serv => adicionarCampoServico(serv.nome, serv.preco));
+            } else {
+                // Se não existir config, cria padrão
+                adicionarCampoServico("Corte Cabelo", "35");
+                adicionarCampoServico("Barba", "25");
+            }
+        }
+        carregarConfiguracoesAdmin();
+
+        window.adicionarCampoServico = function(nome="", preco="") {
+            const div = document.createElement('div');
+            div.className = 'item-servico';
+            div.innerHTML = `
+                <input type="text" placeholder="Nome Serviço" value="${nome}" class="serv-nome">
+                <input type="number" placeholder="Preço" value="${preco}" class="serv-preco" style="width:80px">
+                <button onclick="this.parentElement.remove()" style="background:#d9534f; color:white; border:none; border-radius:5px;">X</button>
+            `;
+            document.getElementById('lista-servicos-inputs').appendChild(div);
+        }
+
+        window.salvarConfiguracoes = async function() {
+            const inicio = Number(document.getElementById('conf-inicio').value);
+            const fim = Number(document.getElementById('conf-fim').value);
+            const intervalo = Number(document.getElementById('conf-intervalo').value);
+
+            const servicosDOM = document.querySelectorAll('.item-servico');
+            let servicos = [];
+            servicosDOM.forEach((item, index) => {
+                const nome = item.querySelector('.serv-nome').value;
+                const preco = item.querySelector('.serv-preco').value;
+                if(nome && preco) servicos.push({ id: index, nome: nome, preco: `R$ ${preco},00` });
+            });
+
+            const btn = document.querySelector('.btn-salvar');
+            btn.innerText = "Salvando...";
+            
+            try {
+                await setDoc(configRef, {
+                    horarioInicio: inicio,
+                    horarioFim: fim,
+                    intervaloMinutos: intervalo,
+                    servicos: servicos
+                }, { merge: true });
+                
+                alert("Configurações atualizadas! O App do cliente já mudou.");
+                btn.innerText = "SALVAR ALTERAÇÕES";
+            } catch (error) {
+                console.error(error);
+                alert("Erro ao salvar.");
+            }
         }
     </script>
 </body>

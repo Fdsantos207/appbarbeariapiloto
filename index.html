@@ -3,76 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BarberApp - Agendamento</title>
+    <title>Agendamento</title>
     <style>
-        /* --- ESTILOS DO APP --- */
-        :root {
-            --cor-primaria: #D4AF37; /* Dourado */
-            --cor-fundo: #1a1a1a;
-            --cor-card: #2c2c2c;
-            --cor-texto: #ffffff;
-            --botao-sucesso: #28a745;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        :root { --cor-primaria: #D4AF37; --cor-fundo: #1a1a1a; --cor-card: #2c2c2c; --cor-texto: #ffffff; --botao-sucesso: #28a745; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
         body { background-color: var(--cor-fundo); color: var(--cor-texto); padding-bottom: 80px; }
         
-        header {
-            text-align: center; padding: 20px; background: var(--cor-card);
-            border-bottom: 2px solid var(--cor-primaria); position: sticky; top: 0; z-index: 100;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
-        h1 { font-size: 1.5rem; color: var(--cor-primaria); text-transform: uppercase; letter-spacing: 2px; }
-
+        header { text-align: center; padding: 20px; background: var(--cor-card); border-bottom: 2px solid var(--cor-primaria); position: sticky; top: 0; z-index: 100; }
         .container { padding: 20px; max-width: 600px; margin: 0 auto; }
         .section-title { margin: 20px 0 10px; font-size: 1.1rem; color: #b0b0b0; border-left: 4px solid var(--cor-primaria); padding-left: 10px; }
-
-        .servico-card {
-            background: var(--cor-card); padding: 15px; margin-bottom: 10px; border-radius: 10px;
-            display: flex; justify-content: space-between; align-items: center; cursor: pointer;
-            border: 1px solid transparent; transition: 0.3s;
-        }
-        .servico-card.selecionado { border-color: var(--cor-primaria); background-color: #3a3a3a; }
-        .servico-info h3 { font-size: 1rem; margin-bottom: 5px; }
-        .servico-info p { color: var(--cor-primaria); font-weight: bold; }
-
-        input[type="date"] {
-            width: 100%; padding: 15px; background: var(--cor-card); border: 1px solid #444;
-            color: white; border-radius: 8px; font-size: 1rem; margin-bottom: 20px;
-        }
         
+        /* Cards */
+        .servico-card { background: var(--cor-card); padding: 15px; margin-bottom: 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid transparent; }
+        .servico-card.selecionado { border-color: var(--cor-primaria); background-color: #333; }
+        
+        /* Inputs e Botões */
+        input[type="date"] { width: 100%; padding: 15px; background: var(--cor-card); border: 1px solid #444; color: white; border-radius: 8px; margin-bottom: 20px; }
         .grade-horarios { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        .horario-btn {
-            background: var(--cor-card); border: 1px solid #444; color: white; padding: 10px;
-            border-radius: 5px; cursor: pointer; font-size: 0.9rem;
-        }
-        .horario-btn.selecionado { background: var(--cor-primaria); color: var(--cor-fundo); font-weight: bold; border-color: var(--cor-primaria); }
-        .horario-btn.ocupado { background: #333; color: #555; text-decoration: line-through; cursor: not-allowed; border: 1px solid #222; }
+        .horario-btn { background: var(--cor-card); border: 1px solid #444; color: white; padding: 10px; border-radius: 5px; font-size: 0.9rem; }
+        .horario-btn.selecionado { background: var(--cor-primaria); color: var(--cor-fundo); font-weight: bold; }
+        .horario-btn.ocupado { background: #333; color: #555; text-decoration: line-through; }
 
-        .fab-container {
-            position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px;
-            background: rgba(26, 26, 26, 0.95); border-top: 1px solid #333; display: flex; justify-content: center; z-index: 150;
-        }
-        .btn-agendar {
-            background: var(--botao-sucesso); color: white; border: none; padding: 15px 40px;
-            border-radius: 30px; font-size: 1.1rem; font-weight: bold; width: 100%; max-width: 500px;
-            cursor: pointer; opacity: 0.5; pointer-events: none; transition: 0.3s;
-        }
-        .btn-agendar.ativo { opacity: 1; pointer-events: all; box-shadow: 0 0 15px rgba(40, 167, 69, 0.4); }
-
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 200; align-items: center; justify-content: center; }
-        .modal-content { background: var(--cor-card); padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; }
+        .fab-container { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px; background: #1a1a1a; border-top: 1px solid #333; display: flex; justify-content: center; z-index: 99; }
+        .btn-agendar { background: var(--botao-sucesso); color: white; border: none; padding: 15px 40px; border-radius: 30px; font-weight: bold; width: 100%; max-width: 500px; opacity: 0.5; pointer-events: none; }
+        .btn-agendar.ativo { opacity: 1; pointer-events: all; }
+        
+        /* Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 200; align-items: center; justify-content: center; }
+        .modal-content { background: var(--cor-card); padding: 30px; border-radius: 10px; width: 90%; max-width: 400px; text-align: center; }
         .modal input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: none; }
-        .btn-confirmar { background: var(--cor-primaria); color: var(--cor-fundo); font-weight: bold; padding: 12px; width: 100%; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; }
+        .btn-confirmar { background: var(--cor-primaria); color: black; font-weight: bold; padding: 12px; width: 100%; border: none; border-radius: 5px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1 id="nome-barbearia">Carregando...</h1>
-    </header>
+    <header><h1 id="titulo-app">Carregando...</h1></header>
 
-    <div class="container">
+    <div class="container" id="conteudo-principal" style="opacity: 0.3; pointer-events: none;">
         <div class="section-title">1. Escolha o Serviço</div>
         <div id="lista-servicos"></div>
 
@@ -80,38 +47,30 @@
         <input type="date" id="data-agendamento">
 
         <div class="section-title">3. Escolha o Horário</div>
-        <div class="grade-horarios" id="lista-horarios">
-            <p style="grid-column: span 4; text-align: center; color: #555;">Selecione uma data primeiro</p>
-        </div>
-
-        <div style="margin-top: 50px; text-align: center; padding-bottom: 50px; opacity: 0.6;">
-            <p style="font-size: 0.8rem; margin-bottom: 10px;">É o dono da barbearia?</p>
-            <a href="admin.html" style="text-decoration: none; border: 1px solid #444; padding: 8px 15px; border-radius: 20px; color: #aaa; font-size: 0.8rem;">
-                🔒 Acessar Área do Parceiro
-            </a>
+        <div class="grade-horarios" id="lista-horarios"><p style="grid-column: span 4; text-align: center; color: #555;">Selecione data e serviço</p></div>
+    
+        <div style="margin-top:40px; text-align:center;">
+            <a href="admin.html" style="color:#444; text-decoration:none; font-size:0.8rem; border:1px solid #333; padding:5px 10px; border-radius:15px;">🔒 Área do Parceiro</a>
         </div>
     </div>
 
-    <div class="fab-container">
-        <button id="btn-finalizar" class="btn-agendar">AGENDAR</button>
-    </div>
+    <div class="fab-container"><button id="btn-finalizar" class="btn-agendar">AGENDAR</button></div>
 
     <div class="modal" id="modal-cadastro">
         <div class="modal-content">
-            <h2 style="margin-bottom: 20px; color: var(--cor-primaria)">Quase lá!</h2>
-            <p style="margin-bottom: 15px;">Informe seus dados:</p>
+            <h2 style="color:var(--cor-primaria)">Confirmar</h2>
             <input type="text" id="cliente-nome" placeholder="Seu Nome">
-            <input type="tel" id="cliente-zap" placeholder="Seu WhatsApp (apenas números)">
-            <button class="btn-confirmar" onclick="finalizarAgendamento()">CONFIRMAR</button>
-            <button onclick="fecharModal()" style="background:transparent; border:none; color:#777; margin-top:15px; cursor:pointer">Cancelar</button>
+            <input type="tel" id="cliente-zap" placeholder="Seu WhatsApp">
+            <button class="btn-confirmar" onclick="finalizarAgendamento()">CONFIRMAR AGENDAMENTO</button>
+            <button onclick="document.getElementById('modal-cadastro').style.display='none'" style="background:transparent; border:none; color:#777; margin-top:15px;">Cancelar</button>
         </div>
     </div>
 
     <script type="module">
-        /* --- CONFIGURAÇÃO DO FIREBASE (SUBSTITUA AQUI) --- */
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+        /* --- CONFIGURAÇÃO FIREBASE (COLE SUAS CHAVES AQUI) --- */
         const firebaseConfig = {
             apiKey: "SUA_API_KEY_AQUI",
             authDomain: "SEU_PROJETO.firebaseapp.com",
@@ -123,113 +82,124 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-
-        /* --- DADOS DA BARBEARIA --- */
-        const CONFIG = {
-            id_loja: "barbearia_central_01",
-            nome: "BARBEARIA PILOTO",
-            servicos: [
-                { id: 1, nome: "Corte Cabelo", preco: "R$ 35,00" },
-                { id: 2, nome: "Barba Terapia", preco: "R$ 25,00" },
-                { id: 3, nome: "Combo Completo", preco: "R$ 55,00" }
-            ],
-            horarioInicio: 9,
-            horarioFim: 19,
-            intervaloMinutos: 45
-        };
-
+        const ID_LOJA = "barbearia_central_01";
+        
+        let LOJA_CONFIG = {}; 
         let selecao = { servico: null, data: null, horario: null };
 
-        document.getElementById('nome-barbearia').innerText = CONFIG.nome;
+        // 1. INICIALIZAÇÃO INTELIGENTE (Busca config no banco)
+        async function iniciarApp() {
+            const docRef = doc(db, "lojas", ID_LOJA);
+            const docSnap = await getDoc(docRef);
 
-        const containerServicos = document.getElementById('lista-servicos');
-        CONFIG.servicos.forEach(serv => {
-            const div = document.createElement('div');
-            div.className = 'servico-card';
-            div.innerHTML = `<div class="servico-info"><h3>${serv.nome}</h3><p>${serv.preco}</p></div><div>➡️</div>`;
-            div.onclick = () => selecionarServico(div, serv);
-            containerServicos.appendChild(div);
-        });
+            if (docSnap.exists()) {
+                LOJA_CONFIG = docSnap.data();
+                renderizarApp();
+            } else {
+                alert("Erro: Configuração da barbearia não encontrada. Acesse o painel Admin para configurar.");
+                document.getElementById('titulo-app').innerText = "Loja não configurada";
+            }
+        }
+        iniciarApp();
 
-        function selecionarServico(el, serv) {
-            document.querySelectorAll('.servico-card').forEach(e => e.classList.remove('selecionado'));
-            el.classList.add('selecionado');
-            selecao.servico = serv;
-            atualizarBotao();
+        function renderizarApp() {
+            document.getElementById('titulo-app').innerText = "Barbearia Online"; // Ou LOJA_CONFIG.nome se tiver
+            document.getElementById('conteudo-principal').style.opacity = "1";
+            document.getElementById('conteudo-principal').style.pointerEvents = "all";
+
+            // Renderiza Serviços
+            const container = document.getElementById('lista-servicos');
+            container.innerHTML = '';
+            LOJA_CONFIG.servicos.forEach(serv => {
+                const div = document.createElement('div');
+                div.className = 'servico-card';
+                div.innerHTML = `<div><h3>${serv.nome}</h3><p style="color:var(--cor-primaria)">${serv.preco}</p></div><div>➡️</div>`;
+                div.onclick = () => {
+                    document.querySelectorAll('.servico-card').forEach(e => e.classList.remove('selecionado'));
+                    div.classList.add('selecionado');
+                    selecao.servico = serv;
+                    atualizarBotao();
+                };
+                container.appendChild(div);
+            });
         }
 
+        // 2. Lógica de Data e Horário
         const inputData = document.getElementById('data-agendamento');
         inputData.min = new Date().toISOString().split("T")[0];
         
         inputData.addEventListener('change', async (e) => {
             selecao.data = e.target.value;
-            document.getElementById('lista-horarios').innerHTML = '<p style="grid-column: span 4; text-align: center;">Buscando horários...</p>';
-            const ocupados = await buscarHorariosOcupados(selecao.data);
-            gerarHorarios(selecao.data, ocupados);
-            atualizarBotao();
-        });
-
-        async function buscarHorariosOcupados(data) {
-            const agendamentosRef = collection(db, "agendamentos");
-            const q = query(agendamentosRef, where("loja_id", "==", CONFIG.id_loja), where("data", "==", data));
+            const container = document.getElementById('lista-horarios');
+            container.innerHTML = '<p style="grid-column: span 4; text-align: center;">Verificando agenda...</p>';
+            
+            // Busca ocupados
+            const q = query(collection(db, "agendamentos"), where("loja_id", "==", ID_LOJA), where("data", "==", selecao.data));
             const snapshot = await getDocs(q);
             const ocupados = [];
             snapshot.forEach(doc => ocupados.push(doc.data().horario));
-            return ocupados;
-        }
 
-        function gerarHorarios(data, ocupados) {
+            gerarGradeHorarios(ocupados);
+            atualizarBotao();
+        });
+
+        function gerarGradeHorarios(ocupados) {
             const container = document.getElementById('lista-horarios');
             container.innerHTML = '';
-            let hora = CONFIG.horarioInicio, min = 0;
-            while (hora < CONFIG.horarioFim) {
-                const tempo = `${hora.toString().padStart(2,'0')}:${min.toString().padStart(2,'0')}`;
+            
+            let hora = LOJA_CONFIG.horarioInicio;
+            let min = 0;
+            const fim = LOJA_CONFIG.horarioFim;
+
+            while (hora < fim) {
+                const horarioStr = `${hora.toString().padStart(2,'0')}:${min.toString().padStart(2,'0')}`;
+                
                 const btn = document.createElement('button');
                 btn.className = 'horario-btn';
-                btn.innerText = tempo;
-                if (ocupados.includes(tempo)) {
+                btn.innerText = horarioStr;
+
+                if (ocupados.includes(horarioStr)) {
                     btn.classList.add('ocupado'); btn.disabled = true;
                 } else {
                     btn.onclick = () => {
                         document.querySelectorAll('.horario-btn').forEach(e => e.classList.remove('selecionado'));
                         btn.classList.add('selecionado');
-                        selecao.horario = tempo;
+                        selecao.horario = horarioStr;
                         atualizarBotao();
                     };
                 }
                 container.appendChild(btn);
-                min += CONFIG.intervaloMinutos;
-                if (min >= 60) { hora++; min -= 60; }
+
+                min += LOJA_CONFIG.intervaloMinutos;
+                if(min >= 60) { hora++; min -= 60; }
             }
         }
 
         function atualizarBotao() {
             const btn = document.getElementById('btn-finalizar');
-            if (selecao.servico && selecao.data && selecao.horario) {
+            if(selecao.servico && selecao.data && selecao.horario) {
                 btn.classList.add('ativo'); btn.innerText = `AGENDAR (${selecao.horario})`;
             } else {
-                btn.classList.remove('ativo'); btn.innerText = 'AGENDAR';
+                btn.classList.remove('ativo'); btn.innerText = "AGENDAR";
             }
         }
 
         document.getElementById('btn-finalizar').addEventListener('click', () => {
-            if (document.getElementById('btn-finalizar').classList.contains('ativo')) {
+            if(document.getElementById('btn-finalizar').classList.contains('ativo')) {
                 document.getElementById('modal-cadastro').style.display = 'flex';
             }
         });
 
-        window.fecharModal = () => document.getElementById('modal-cadastro').style.display = 'none';
-
         window.finalizarAgendamento = async function() {
             const nome = document.getElementById('cliente-nome').value;
             const zap = document.getElementById('cliente-zap').value;
-            if(!nome || !zap) return alert("Preencha todos os campos!");
             
-            document.querySelector('.btn-confirmar').innerText = "Processando...";
+            if(!nome || !zap) return alert("Preencha seus dados.");
+            document.querySelector('.btn-confirmar').innerText = "Agendando...";
 
             try {
                 await addDoc(collection(db, "agendamentos"), {
-                    loja_id: CONFIG.id_loja,
+                    loja_id: ID_LOJA,
                     data: selecao.data,
                     horario: selecao.horario,
                     servico: selecao.servico.nome,
@@ -240,8 +210,7 @@
                 alert("Agendamento Confirmado!");
                 location.reload();
             } catch (e) {
-                alert("Erro ao agendar: " + e.message);
-                document.querySelector('.btn-confirmar').innerText = "TENTAR NOVAMENTE";
+                alert("Erro: " + e.message);
             }
         }
     </script>
