@@ -3,167 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel do Parceiro - Gestão</title>
+    <title>Painel do Parceiro</title>
+
+    <script>
+        const SENHA_MESTRE = "admin123"; // DEFINA SUA SENHA AQUI
+        if (sessionStorage.getItem("logado") !== "sim") {
+            const tentativa = prompt("🔒 Área Restrita.\nDigite a senha:");
+            if (tentativa === SENHA_MESTRE) {
+                sessionStorage.setItem("logado", "sim");
+            } else {
+                alert("Senha incorreta!");
+                window.location.href = "index.html";
+            }
+        }
+    </script>
+
     <style>
-        :root {
-            --cor-fundo: #121212;
-            --cor-card: #1e1e1e;
-            --cor-destaque: #D4AF37; /* Dourado */
-            --cor-texto: #e0e0e0;
-            --verde-zap: #25D366;
-        }
-
+        :root { --cor-fundo: #121212; --cor-card: #1e1e1e; --cor-destaque: #D4AF37; --verde-zap: #25D366; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-        body { background-color: var(--cor-fundo); color: var(--cor-texto); padding: 20px; }
-
-        /* Topo */
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 15px; }
+        body { background-color: var(--cor-fundo); color: #e0e0e0; padding: 20px; }
+        
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 15px; }
         h1 { font-size: 1.2rem; color: var(--cor-destaque); }
-        .badge-hoje { background: #333; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; }
+        .voltar { color: #888; text-decoration: none; font-size: 0.9rem; }
 
-        /* Filtros e Resumo */
         .painel-controle { background: var(--cor-card); padding: 15px; border-radius: 10px; margin-bottom: 20px; }
-        input[type="date"] {
-            width: 100%; padding: 10px; background: #333; border: 1px solid #444; 
-            color: white; border-radius: 5px; margin-bottom: 15px;
-        }
+        input[type="date"] { width: 100%; padding: 10px; background: #333; border: 1px solid #444; color: white; border-radius: 5px; margin-bottom: 15px; }
         
         .resumo-box { display: flex; justify-content: space-between; }
         .resumo-item { text-align: center; width: 48%; background: #2a2a2a; padding: 10px; border-radius: 8px; }
-        .resumo-valor { font-size: 1.2rem; font-weight: bold; color: var(--cor-destaque); display: block; margin-top: 5px;}
-        .resumo-label { font-size: 0.8rem; color: #aaa; }
+        .resumo-valor { font-size: 1.2rem; font-weight: bold; color: var(--cor-destaque); display: block; }
 
-        /* Lista de Agendamentos */
-        .lista-agendamentos { list-style: none; }
         .card-cliente { 
-            background: var(--cor-card); padding: 15px; margin-bottom: 15px; 
-            border-radius: 8px; border-left: 5px solid var(--cor-destaque);
-            display: flex; justify-content: space-between; align-items: center;
+            background: var(--cor-card); padding: 15px; margin-bottom: 15px; border-radius: 8px; 
+            border-left: 5px solid var(--cor-destaque); display: flex; justify-content: space-between; align-items: center;
         }
-        
-        .info-horario { font-size: 1.3rem; font-weight: bold; margin-right: 15px; min-width: 60px; }
-        .info-dados h3 { font-size: 1rem; margin-bottom: 3px; }
+        .info-horario { font-size: 1.3rem; font-weight: bold; margin-right: 15px; }
+        .info-dados h3 { font-size: 1rem; }
         .info-dados p { color: #888; font-size: 0.9rem; }
-        .info-dados span { color: var(--cor-destaque); font-size: 0.8rem; font-weight: bold; }
-
-        .btn-zap {
-            background: var(--verde-zap); color: white; border: none;
-            width: 40px; height: 40px; border-radius: 50%;
-            font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            text-decoration: none;
-        }
-
-        .sem-agendamentos { text-align: center; padding: 40px; color: #555; }
-
+        .btn-zap { background: var(--verde-zap); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 1.2rem; }
     </style>
 </head>
 <body>
 
     <header>
         <h1>Painel do Parceiro</h1>
-        <div class="badge-hoje" id="data-topo">Hoje</div>
+        <a href="index.html" class="voltar">⬅ Voltar</a>
     </header>
 
     <div class="painel-controle">
-        <label style="font-size: 0.9rem; color:#aaa">Filtrar data:</label>
+        <label>Filtrar data:</label>
         <input type="date" id="filtro-data">
-        
         <div class="resumo-box">
-            <div class="resumo-item">
-                <span class="resumo-label">Clientes</span>
-                <span class="resumo-valor" id="total-clientes">0</span>
-            </div>
-            <div class="resumo-item">
-                <span class="resumo-label">Faturamento Est.</span>
-                <span class="resumo-valor" id="total-faturamento">R$ 0,00</span>
-            </div>
+            <div class="resumo-item"><span class="resumo-valor" id="total-clientes">0</span><small>Clientes</small></div>
+            <div class="resumo-item"><span class="resumo-valor" id="total-faturamento">R$ 0</span><small>Faturamento</small></div>
         </div>
     </div>
 
-    <div id="container-lista">
-        <p class="sem-agendamentos">Carregando agenda...</p>
-    </div>
+    <div id="container-lista"><p style="text-align:center">Carregando...</p></div>
 
     <script type="module">
-        /* ================= CONFIGURAÇÃO (MESMA DO CLIENTE) ================= */
+        /* --- CONFIGURAÇÃO DO FIREBASE (SUBSTITUA AQUI IGUAL AO INDEX) --- */
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // *** COLE AQUI AS MESMAS CHAVES DO ARQUIVO INDEX.HTML ***
         const firebaseConfig = {
-  apiKey: "AIzaSyCEAeMxXbX047DhHYyAI-r4I_4eqlGA4W0",
-  authDomain: "appbarbeariapiloto.firebaseapp.com",
-  projectId: "appbarbeariapiloto",
-  storageBucket: "appbarbeariapiloto.firebasestorage.app",
-  messagingSenderId: "132643765315",
-  appId: "1:132643765315:web:60568343cecfa5720268f6"
-};
+            apiKey: "SUA_API_KEY_AQUI",
+            authDomain: "SEU_PROJETO.firebaseapp.com",
+            projectId: "SEU_PROJETO",
+            storageBucket: "SEU_PROJETO.appspot.com",
+            messagingSenderId: "SEU_SENDER_ID",
+            appId: "SEU_APP_ID"
+        };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // CONFIGURAÇÃO DO PARCEIRO
         const ID_LOJA = "barbearia_central_01"; 
-
-        // Tabela de Preços para cálculo (Simulação, pois salvamos apenas o nome do serviço)
-        const PRECOS = {
-            "Corte Cabelo": 35,
-            "Barba Terapia": 25,
-            "Combo Completo": 55
-        };
-
-        // --- LÓGICA DO PAINEL ---
+        const PRECOS = { "Corte Cabelo": 35, "Barba Terapia": 25, "Combo Completo": 55 };
 
         const inputData = document.getElementById('filtro-data');
-        
-        // Define data de hoje como padrão
         const hoje = new Date().toISOString().split("T")[0];
         inputData.value = hoje;
         carregarAgenda(hoje);
 
-        inputData.addEventListener('change', (e) => {
-            carregarAgenda(e.target.value);
-        });
+        inputData.addEventListener('change', (e) => carregarAgenda(e.target.value));
 
         async function carregarAgenda(data) {
-            document.getElementById('data-topo').innerText = data.split('-').reverse().join('/');
             const container = document.getElementById('container-lista');
-            container.innerHTML = '<p class="sem-agendamentos">Buscando...</p>';
+            container.innerHTML = '<p style="text-align:center">Buscando...</p>';
 
-            const agendamentosRef = collection(db, "agendamentos");
-            const q = query(agendamentosRef, 
-                where("loja_id", "==", ID_LOJA),
-                where("data", "==", data)
-            );
-
-            const querySnapshot = await getDocs(q);
+            const q = query(collection(db, "agendamentos"), where("loja_id", "==", ID_LOJA), where("data", "==", data));
+            const snapshot = await getDocs(q);
             
-            let html = "";
-            let totalClientes = 0;
-            let totalDinheiro = 0;
-            let listaAgendamentos = [];
+            let html = "", totalCli = 0, totalFat = 0;
+            let lista = [];
 
-            querySnapshot.forEach((doc) => {
-                listaAgendamentos.push(doc.data());
-            });
+            snapshot.forEach(doc => lista.push(doc.data()));
+            lista.sort((a, b) => a.horario.localeCompare(b.horario));
 
-            // Ordenar por horário (Javascript sort, evita criar índices complexos no Firebase agora)
-            listaAgendamentos.sort((a, b) => a.horario.localeCompare(b.horario));
-
-            if (listaAgendamentos.length === 0) {
-                container.innerHTML = '<p class="sem-agendamentos">Nenhum agendamento para este dia.</p>';
-                atualizarResumo(0, 0);
-                return;
+            if (lista.length === 0) {
+                container.innerHTML = '<p style="text-align:center; padding:20px; color:#555">Nenhum agendamento hoje.</p>';
+                atualizarResumo(0, 0); return;
             }
 
-            listaAgendamentos.forEach(item => {
-                totalClientes++;
-                // Tenta achar o preço pelo nome, se não achar, soma 0
+            lista.forEach(item => {
+                totalCli++;
                 const valor = PRECOS[item.servico] || 0;
-                totalDinheiro += valor;
-
-                // Formata link do zap
-                // Remove caracteres não numéricos para o link
+                totalFat += valor;
                 const zapLink = item.cliente_zap.replace(/\D/g, ''); 
 
                 html += `
@@ -172,24 +119,21 @@
                             <div class="info-horario">${item.horario}</div>
                             <div class="info-dados">
                                 <h3>${item.cliente_nome}</h3>
-                                <p>${item.servico}</p>
-                                <span>R$ ${valor},00</span>
+                                <p>${item.servico} - R$ ${valor}</p>
                             </div>
                         </div>
-                        <a href="https://wa.me/55${zapLink}" target="_blank" class="btn-zap">
-                            📱
-                        </a>
+                        <a href="https://wa.me/55${zapLink}" target="_blank" class="btn-zap">📱</a>
                     </div>
                 `;
             });
 
             container.innerHTML = html;
-            atualizarResumo(totalClientes, totalDinheiro);
+            atualizarResumo(totalCli, totalFat);
         }
 
-        function atualizarResumo(clientes, dinheiro) {
-            document.getElementById('total-clientes').innerText = clientes;
-            document.getElementById('total-faturamento').innerText = `R$ ${dinheiro},00`;
+        function atualizarResumo(c, f) {
+            document.getElementById('total-clientes').innerText = c;
+            document.getElementById('total-faturamento').innerText = `R$ ${f},00`;
         }
     </script>
 </body>
