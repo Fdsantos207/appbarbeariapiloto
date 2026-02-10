@@ -34,18 +34,6 @@ async function iniciarApp() {
 }
 
 function renderizarApp() {
-  // ... dentro da função renderizarApp ...
-LOJA_CONFIG.servicos.forEach(serv => {
-    const div = document.createElement('div');
-    div.className = 'servico-card';
-    
-    // --- LINHA PARA ALTERAR ---
-    // ANTES: ... </div><div>➡️</div>`;
-    
-    // DEPOIS (Trocamos a seta por uma tesoura):
-    div.innerHTML = `<div><h3>${serv.nome}</h3><p style="color:var(--cor-dourado-solido)">${serv.preco}</p></div><div>✂️</div>`;
-    
-    // ... resto do código
     const titulo = document.getElementById('nome-barbearia');
     if(titulo) titulo.innerText = LOJA_CONFIG.nome || "Barbearia"; 
     
@@ -57,7 +45,7 @@ LOJA_CONFIG.servicos.forEach(serv => {
         LOJA_CONFIG.servicos.forEach(serv => {
             const div = document.createElement('div');
             div.className = 'servico-card';
-            div.innerHTML = `<div><h3>${serv.nome}</h3><p style="color:var(--cor-dourado-solido)">${serv.preco}</p></div><div>➡️</div>`;
+            div.innerHTML = `<div><h3>${serv.nome}</h3><p style="color:var(--cor-dourado-solido)">${serv.preco}</p></div><div>✂️</div>`;
             div.onclick = () => {
                 document.querySelectorAll('.servico-card').forEach(e => e.classList.remove('selecionado'));
                 div.classList.add('selecionado');
