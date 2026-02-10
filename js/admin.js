@@ -1,12 +1,4 @@
 // js/admin.js
-
-import { db, ID_LOJA } from "./config.js";
-import { collection, query, where, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const configRef = doc(db, "lojas", ID_LOJA);
-
-// --- 1. LOGIN ---
-// js/admin.js
 // ATUALIZAÇÃO: MENSAGEM DE BLOQUEIO PROFISSIONAL
 
 import { db, ID_LOJA, IMAGEM_PADRAO } from "./config.js";
@@ -91,6 +83,7 @@ if(sessionStorage.getItem("logado_loja_" + ID_LOJA) === "sim") {
         }
     });
 }
+
 // --- 2. AGENDA ---
 const inputData = document.getElementById('filtro-data');
 inputData.value = new Date().toISOString().split("T")[0];
