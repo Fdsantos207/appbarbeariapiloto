@@ -47,9 +47,9 @@
 <body>
 
     <div class="tabs">
-        <button class="tab-btn ativo" onclick="mudarAba('lista')">📋 Todas as Lojas</button>
-        <button class="tab-btn" onclick="mudarAba('criar')">➕ Nova Loja</button>
-        <button class="tab-btn" onclick="mudarAba('editar')">✏️ Gerenciar</button>
+        <button id="tab-lista" class="tab-btn ativo" onclick="mudarAba('lista')">📋 Todas as Lojas</button>
+        <button id="tab-criar" class="tab-btn" onclick="mudarAba('criar')">➕ Nova Loja</button>
+        <button id="tab-editar" class="tab-btn" onclick="mudarAba('editar')">✏️ Gerenciar</button>
     </div>
 
     <div id="aba-lista" class="container">
@@ -102,7 +102,6 @@
         import { db } from "./js/config.js";
         import { doc, setDoc, getDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // Senha do Dev (Simples)
         const SENHA_DEV = "mestre123";
         if(sessionStorage.getItem('dev_logado') !== 'sim') {
             const pass = prompt("Senha do Mestre:");
@@ -110,11 +109,18 @@
             else { document.body.innerHTML = "<h1>Acesso Negado</h1>"; throw new Error("Stop"); }
         }
 
+        // --- FUNÇÃO CORRIGIDA PARA NÃO DAR O ERRO 'UNDEFINED TARGET' ---
         window.mudarAba = function(aba) {
+            // Esconde todas as abas
             document.querySelectorAll('.container').forEach(e => e.style.display = 'none');
             document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('ativo'));
+            
+            // Mostra a aba pedida
             document.getElementById(`aba-${aba}`).style.display = 'block';
-            event.target.classList.add('ativo');
+            
+            // Ativa o botão usando o ID (e não o evento de clique)
+            const btn = document.getElementById(`tab-${aba}`);
+            if(btn) btn.classList.add('ativo');
             
             if(aba === 'lista') carregarTodasLojas();
         }
@@ -203,7 +209,7 @@
             } catch (e) { alert("Erro: " + e.message); }
         }
 
-        // --- BUSCAR E EDITAR (COM SENHA) ---
+        // --- BUSCAR E EDITAR ---
         window.buscarLoja = async function() {
             const id = document.getElementById('edit-id').value;
             if(!id) return alert("Digite o ID!");
@@ -215,11 +221,7 @@
                 const dados = docSnap.data();
                 document.getElementById('edit-nome').value = dados.nome;
                 document.getElementById('edit-foto').value = dados.fotoFundo || "";
-                
-                // --- MOSTRA A SENHA ATUAL ---
                 document.getElementById('edit-senha').value = dados.senhaAdmin || "";
-                // ---------------------------
-
                 document.getElementById('edit-status').value = (dados.ativa === false) ? "false" : "true";
                 document.getElementById('form-editar').style.display = 'block';
             } catch (e) { alert("Erro: " + e.message); }
@@ -229,7 +231,7 @@
             const id = document.getElementById('edit-id').value;
             const nome = document.getElementById('edit-nome').value;
             const foto = document.getElementById('edit-foto').value;
-            const senha = document.getElementById('edit-senha').value; // PEGA A SENHA
+            const senha = document.getElementById('edit-senha').value;
             const status = document.getElementById('edit-status').value === "true";
             
             try {
@@ -237,11 +239,11 @@
                     nome: nome, 
                     fotoFundo: foto, 
                     ativa: status,
-                    senhaAdmin: senha // SALVA A NOVA SENHA
+                    senhaAdmin: senha 
                 });
                 alert("Dados atualizados com sucesso!");
                 carregarTodasLojas(); 
-                mudarAba('lista');
+                mudarAba('lista'); // AGORA ISSO VAI FUNCIONAR SEM ERRO
             } catch (e) { alert("Erro: " + e.message); }
         }
 
