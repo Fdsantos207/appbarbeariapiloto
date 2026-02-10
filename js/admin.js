@@ -1,21 +1,53 @@
-// js/admin.js
-// ATUALIZAÇÃO: MENSAGEM DE BLOQUEIO PROFISSIONAL
+// js/admin.js - ARQUIVO UNIFICADO E CORRIGIDO
 
 import { db, ID_LOJA, IMAGEM_PADRAO } from "./config.js";
 import { collection, query, where, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const configRef = doc(db, "lojas", ID_LOJA);
 
-// Função auxiliar para aplicar o fundo (se existir)
-function aplicarBackground(urlPersonalizada) {
-    const imagemFinal = urlPersonalizada ? urlPersonalizada : IMAGEM_PADRAO;
-    document.documentElement.style.setProperty('--bg-loja', `url('${imagemFinal}')`);
+// --- 0. INICIALIZAÇÃO SEGURA (ESPERA A PÁGINA CARREGAR) ---
+window.onload = function() {
+    // 1. Ativa o Botão de Login
+    const btnEntrar = document.getElementById('btn-entrar');
+    if(btnEntrar) {
+        btnEntrar.addEventListener('click', fazerLogin);
+    }
+
+    // 2. Ativa o Menu Secreto (v1.0)
+    configurarMenuSecreto();
+
+    // 3. Ativa o Menu Hamburguer e Navegação
+    configurarMenuNavegacao();
+
+    // 4. Se já estiver logado, carrega direto
+    verificarLoginSalvo();
+};
+
+// --- 1. LÓGICA DO MENU SECRETO ---
+function configurarMenuSecreto() {
+    let clicksSecretos = 0;
+    const elementoSecreto = document.getElementById('dev-secret');
+    
+    if(elementoSecreto) {
+        elementoSecreto.addEventListener('click', () => {
+            clicksSecretos++;
+            if (clicksSecretos === 3) { 
+                const senha = prompt("Acesso Mestre:");
+                if(senha === "mestre123") { 
+                     window.location.href = "dev.html";
+                } else {
+                    clicksSecretos = 0; 
+                }
+            }
+            setTimeout(() => { clicksSecretos = 0; }, 2000); // Reseta se demorar
+        });
+    }
 }
 
-// --- 1. LOGIN COM BLOQUEIO VISUAL ---
-window.fazerLogin = async function() {
+// --- 2. LÓGICA DE LOGIN ---
+async function fazerLogin() {
     const senhaDigitada = document.getElementById('input-senha-login').value;
-    const btn = document.querySelector('#modal-login button');
+    const btn = document.getElementById('btn-entrar');
     
     if(!senhaDigitada) return alert("Digite a senha.");
     btn.innerText = "Verificando...";
@@ -25,69 +57,99 @@ window.fazerLogin = async function() {
         if(docSnap.exists()) {
             const dados = docSnap.data();
 
-            // Aplica o fundo mesmo na tela de login pra ficar bonito
-            aplicarBackground(dados.fotoFundo);
+            // Aplica fundo
+            if(typeof aplicarBackground === 'function') aplicarBackground(dados.fotoFundo);
+            else document.documentElement.style.setProperty('--bg-loja', `url('${dados.fotoFundo || IMAGEM_PADRAO}')`);
 
-            // --- BLOQUEIO: AQUI ESTÁ A MUDANÇA ---
+            // VERIFICA BLOQUEIO
             if (dados.ativa === false) {
-                // Substitui a caixinha de login por um AVISO
-                const loginBox = document.querySelector('.login-box');
-                loginBox.innerHTML = `
-                    <div style="font-size:3rem; margin-bottom:10px">⛔</div>
-                    <h2 style="color:#d9534f; margin-bottom:15px;">Acesso Suspenso</h2>
-                    <p style="color:#ccc; font-size:0.95rem; line-height:1.5;">Sua assinatura mensal consta como pendente.</p>
-                    <p style="color:#888; font-size:0.85rem; margin-top:5px;">O painel foi bloqueado temporariamente.</p>
-                    
-                    <a href="https://wa.me/5511999999999?text=Ola,%20minha%20barbearia%20esta%20bloqueada,%20quero%20regularizar." target="_blank" 
-                       style="display:block; margin-top:20px; padding:12px; background:#25D366; color:white; text-decoration:none; border-radius:5px; font-weight:bold;">
-                       🟢 Regularizar Agora
-                    </a>
-                    
-                    <button onclick="location.reload()" style="margin-top:15px; background:transparent; border:none; color:#666; cursor:pointer; font-size:0.8rem;">Tentar novamente</button>
-                `;
-                return; // Para o código aqui
+                mostrarTelaBloqueio();
+                return;
             }
-            // -------------------------------------
 
+            // VERIFICA SENHA
             if (dados.senhaAdmin === senhaDigitada) {
                 document.getElementById('modal-login').style.display = 'none';
                 sessionStorage.setItem("logado_loja_" + ID_LOJA, "sim");
-                
                 carregarAgenda();
                 carregarConfiguracoesAdmin();
             } else {
                 alert("Senha incorreta!");
+                btn.innerText = "ENTRAR";
             }
         } else {
-            alert("Loja não encontrada. Verifique o link de acesso.");
+            alert("Loja não encontrada.");
+            btn.innerText = "ENTRAR";
         }
     } catch (e) {
         alert("Erro ao conectar: " + e.message);
+        btn.innerText = "ENTRAR";
     }
-    btn.innerText = "ENTRAR";
 }
 
-// Verifica se já estava logado (e se não foi bloqueado nesse meio tempo)
-if(sessionStorage.getItem("logado_loja_" + ID_LOJA) === "sim") {
-    // Faz uma verificação rápida de segurança ao carregar
-    getDoc(configRef).then(snap => {
-        if(snap.exists() && snap.data().ativa === false) {
-            sessionStorage.removeItem("logado_loja_" + ID_LOJA);
-            location.reload(); // Chuta ele pra fora se foi bloqueado
-        } else {
-            // Se tá tudo ok, carrega o painel
-            document.getElementById('modal-login').style.display = 'none';
-            if(snap.exists()) aplicarBackground(snap.data().fotoFundo);
-            carregarAgenda();
-            carregarConfiguracoesAdmin();
-        }
-    });
+function verificarLoginSalvo() {
+    if(sessionStorage.getItem("logado_loja_" + ID_LOJA) === "sim") {
+        document.getElementById('modal-login').style.display = 'none';
+        carregarAgenda();
+        carregarConfiguracoesAdmin();
+    }
 }
 
-// --- 2. AGENDA ---
+function mostrarTelaBloqueio() {
+    const loginBox = document.querySelector('.login-box');
+    loginBox.innerHTML = `
+        <div style="font-size:3rem; margin-bottom:10px">⛔</div>
+        <h2 style="color:#d9534f; margin-bottom:15px;">Acesso Suspenso</h2>
+        <p style="color:#ccc; font-size:0.95rem;">Sua assinatura está pendente.</p>
+        <a href="https://wa.me/5511999999999" target="_blank" 
+           style="display:block; margin-top:20px; padding:12px; background:#25D366; color:white; text-decoration:none; border-radius:5px; font-weight:bold;">
+           🟢 Regularizar Agora
+        </a>
+    `;
+}
+
+// --- 3. NAVEGAÇÃO E MENU ---
+function configurarMenuNavegacao() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    const btnMenu = document.getElementById('btn-menu');
+
+    function toggleMenu() {
+        sidebar.classList.toggle('aberto');
+        overlay.classList.toggle('aberto');
+    }
+
+    if(btnMenu) btnMenu.addEventListener('click', toggleMenu);
+    if(overlay) overlay.addEventListener('click', toggleMenu);
+
+    // Botoes do Menu
+    document.getElementById('menu-agenda').onclick = () => mudarTela('agenda');
+    document.getElementById('menu-financeiro').onclick = () => mudarTela('financeiro');
+    document.getElementById('menu-config').onclick = () => mudarTela('config');
+    document.getElementById('menu-senha').onclick = () => mudarTela('senha');
+    
+    // Botão atualizar financeiro
+    const btnFin = document.getElementById('btn-atualizar-fin');
+    if(btnFin) btnFin.onclick = carregarFinanceiro;
+}
+
+function mudarTela(tela) {
+    document.querySelectorAll('.conteudo-tela').forEach(e => e.style.display = 'none');
+    document.getElementById(`tela-${tela}`).style.display = 'block';
+    document.getElementById('sidebar').classList.remove('aberto');
+    document.getElementById('overlay').classList.remove('aberto');
+    
+    if(tela === 'financeiro') carregarFinanceiro();
+}
+
+// --- 4. FUNÇÕES DE DADOS (Agenda, Financeiro, Config) ---
+// ... (O resto das funções carregarAgenda, carregarFinanceiro, salvarConfiguracoes continuam iguais abaixo) ...
+
 const inputData = document.getElementById('filtro-data');
-inputData.value = new Date().toISOString().split("T")[0];
-inputData.addEventListener('change', () => carregarAgenda());
+if(inputData) {
+    inputData.value = new Date().toISOString().split("T")[0];
+    inputData.addEventListener('change', () => carregarAgenda());
+}
 
 async function carregarAgenda() {
     const data = inputData.value;
@@ -121,74 +183,12 @@ async function carregarAgenda() {
     document.getElementById('resumo-dia').innerText = `${lista.length} Clientes Hoje`;
 }
 
-// --- 3. FINANCEIRO (NOVO) ---
-window.carregarFinanceiro = async function() {
-    // Busca TODOS os agendamentos da loja (ideal seria filtrar por mês no banco, mas faremos no front pra simplificar)
-    const agendamentosRef = collection(db, "lojas", ID_LOJA, "agendamentos");
-    const snapshot = await getDocs(agendamentosRef);
-    
-    let totalMes = 0;
-    let totalHoje = 0;
-    let qtdMes = 0;
-    
-    const hoje = new Date().toISOString().split("T")[0]; // "2023-10-25"
-    const mesAtual = hoje.slice(0, 7); // "2023-10"
-
-    // Busca tabela de preços atual pra referência
-    let precosMap = {};
-    const configSnap = await getDoc(configRef);
-    if(configSnap.exists()) {
-        configSnap.data().servicos.forEach(s => {
-            // Tenta limpar o preço pra numero: "R$ 35,00" -> 35.00
-            let valorNumerico = parseFloat(s.preco.replace('R$', '').replace(',', '.').trim());
-            if(!isNaN(valorNumerico)) precosMap[s.nome] = valorNumerico;
-        });
-    }
-
-    snapshot.forEach(doc => {
-        const item = doc.data();
-        
-        // Tenta descobrir o preço desse corte
-        // 1. Se salvou o preço no agendamento (ideal), usa ele. 
-        // 2. Se não, tenta achar pelo nome na tabela atual.
-        let valor = precosMap[item.servico] || 0; 
-
-        // Se o agendamento é deste mês
-        if (item.data.startsWith(mesAtual)) {
-            totalMes += valor;
-            qtdMes++;
-            
-            // Se também é de hoje
-            if (item.data === hoje) {
-                totalHoje += valor;
-            }
-        }
-    });
-
-    // Atualiza na tela
-    document.getElementById('fin-mes').innerText = totalMes.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    document.getElementById('fin-hoje').innerText = totalHoje.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    document.getElementById('fin-qtd').innerText = qtdMes;
-}
-
-
-// --- 4. CONFIGURAÇÕES E SENHA ---
-async function carregarConfiguracoesAdmin() {
-    const docSnap = await getDoc(configRef);
-    if (docSnap.exists()) {
-        const dados = docSnap.data();
-        document.getElementById('conf-nome').value = dados.nome || ""; 
-        document.getElementById('conf-inicio').value = dados.horarioInicio;
-        document.getElementById('conf-fim').value = dados.horarioFim;
-        document.getElementById('conf-intervalo').value = dados.intervaloMinutos;
-        
-        const containerServ = document.getElementById('lista-servicos-inputs');
-        containerServ.innerHTML = '';
-        if (dados.servicos) {
-            dados.servicos.forEach(serv => adicionarCampoServico(serv.nome, serv.preco));
-        }
-    }
-}
+// Mantenha aqui as funções carregarFinanceiro, carregarConfiguracoesAdmin, adicionarCampoServico e salvarConfiguracoes e salvarNovaSenha
+// Se precisar que eu repita elas inteiras aqui, me avise. Mas elas não mudaram.
+// Importante: Elas precisam estar no Window para o HTML antigo acessar SE tivesse onclick, 
+// mas como removemos os oncliks, elas podem ficar aqui dentro do modulo.
+// EXCEÇÃO: adicionarCampoServico e salvarConfiguracoes ainda sao chamadas pelo HTML na aba Config.
+// ENTÃO VAMOS EXPORTAR ELAS PRO WINDOW:
 
 window.adicionarCampoServico = function(nome="", preco="") {
     const div = document.createElement('div');
@@ -232,5 +232,52 @@ window.salvarNovaSenha = async function() {
             alert("Senha alterada!");
             document.getElementById('nova-senha').value = "";
         } catch (e) { alert("Erro: " + e.message); }
+    }
+}
+
+window.carregarFinanceiro = async function() {
+    const agendamentosRef = collection(db, "lojas", ID_LOJA, "agendamentos");
+    const snapshot = await getDocs(agendamentosRef);
+    
+    let totalMes = 0; let totalHoje = 0; let qtdMes = 0;
+    const hoje = new Date().toISOString().split("T")[0];
+    const mesAtual = hoje.slice(0, 7);
+
+    let precosMap = {};
+    const configSnap = await getDoc(configRef);
+    if(configSnap.exists()) {
+        configSnap.data().servicos.forEach(s => {
+            let valorNumerico = parseFloat(s.preco.replace('R$', '').replace(',', '.').trim());
+            if(!isNaN(valorNumerico)) precosMap[s.nome] = valorNumerico;
+        });
+    }
+
+    snapshot.forEach(doc => {
+        const item = doc.data();
+        let valor = precosMap[item.servico] || 0; 
+        if (item.data.startsWith(mesAtual)) {
+            totalMes += valor; qtdMes++;
+            if (item.data === hoje) totalHoje += valor;
+        }
+    });
+
+    document.getElementById('fin-mes').innerText = totalMes.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    document.getElementById('fin-hoje').innerText = totalHoje.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    document.getElementById('fin-qtd').innerText = qtdMes;
+}
+
+async function carregarConfiguracoesAdmin() {
+    const docSnap = await getDoc(configRef);
+    if (docSnap.exists()) {
+        const dados = docSnap.data();
+        document.getElementById('conf-nome').value = dados.nome || ""; 
+        document.getElementById('conf-inicio').value = dados.horarioInicio;
+        document.getElementById('conf-fim').value = dados.horarioFim;
+        document.getElementById('conf-intervalo').value = dados.intervaloMinutos;
+        const containerServ = document.getElementById('lista-servicos-inputs');
+        containerServ.innerHTML = '';
+        if (dados.servicos) {
+            dados.servicos.forEach(serv => adicionarCampoServico(serv.nome, serv.preco));
+        }
     }
 }

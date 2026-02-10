@@ -36,7 +36,7 @@
             
             <input type="password" id="input-senha-login" placeholder="Senha" style="width:100%; padding:10px; margin-bottom:15px; background:#333; border:1px solid #444; color:white;">
             
-            <button id="btn-entrar" onclick="fazerLogin()" style="width:100%; padding:12px; background:#D4AF37; border:none; font-weight:bold; cursor:pointer;">ENTRAR</button>
+            <button id="btn-entrar" style="width:100%; padding:12px; background:#D4AF37; border:none; font-weight:bold; cursor:pointer;">ENTRAR</button>
             
             <a href="index.html" style="display:block; margin-top:15px; color:#666; font-size:0.8rem; text-decoration:none;">← Voltar ao App</a>
 
@@ -45,20 +45,20 @@
     </div>
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <button onclick="toggleMenu()" style="background:none; border:none; color:#D4AF37; font-size:1.8rem; cursor:pointer;">☰</button>
+        <button id="btn-menu" style="background:none; border:none; color:#D4AF37; font-size:1.8rem; cursor:pointer;">☰</button>
         <h2 style="color:#D4AF37; font-size:1.2rem;">Painel Gerencial</h2>
         <div></div>
     </div>
 
     <div id="sidebar" class="sidebar">
         <h3 style="color:#D4AF37; margin-bottom:30px;">Menu Gerencial</h3>
-        <div class="menu-item ativo" onclick="mudarTela('agenda')">📅 Agenda</div>
-        <div class="menu-item" onclick="mudarTela('financeiro')">💰 Financeiro</div>
-        <div class="menu-item" onclick="mudarTela('config')">⚙️ Configurações</div>
-        <div class="menu-item" onclick="mudarTela('senha')">🔒 Alterar Senha</div>
+        <div class="menu-item ativo" id="menu-agenda">📅 Agenda</div>
+        <div class="menu-item" id="menu-financeiro">💰 Financeiro</div>
+        <div class="menu-item" id="menu-config">⚙️ Configurações</div>
+        <div class="menu-item" id="menu-senha">🔒 Alterar Senha</div>
         <a href="index.html" class="menu-item voltar">⬅ Voltar ao App</a>
     </div>
-    <div id="overlay" class="overlay" onclick="toggleMenu()"></div>
+    <div id="overlay" class="overlay"></div>
 
     <div id="tela-agenda" class="conteudo-tela">
         <div class="painel-controle">
@@ -84,7 +84,7 @@
                 <span class="valor" id="fin-qtd">0</span>
             </div>
         </div>
-        <button onclick="carregarFinanceiro()" style="width:100%; padding:15px; background:#333; color:white; border:1px solid #444; border-radius:8px; cursor:pointer;">🔄 Atualizar Dados</button>
+        <button id="btn-atualizar-fin" style="width:100%; padding:15px; background:#333; color:white; border:1px solid #444; border-radius:8px; cursor:pointer;">🔄 Atualizar Dados</button>
     </div>
 
     <div id="tela-config" class="conteudo-tela" style="display:none;">
@@ -113,43 +113,6 @@
         </div>
     </div>
 
-    <script>
-        // Funções visuais básicas
-        function toggleMenu() {
-            document.getElementById('sidebar').classList.toggle('aberto');
-            document.getElementById('overlay').classList.toggle('aberto');
-        }
-        function mudarTela(tela) {
-            document.querySelectorAll('.conteudo-tela').forEach(e => e.style.display = 'none');
-            document.getElementById(`tela-${tela}`).style.display = 'block';
-            toggleMenu();
-            if(tela === 'financeiro' && window.carregarFinanceiro) window.carregarFinanceiro();
-        }
-
-        // --- LÓGICA DO MENU SECRETO (CORRIGIDA E SEGURA) ---
-        document.addEventListener("DOMContentLoaded", function() {
-            let clicksSecretos = 0;
-            const elementoSecreto = document.getElementById('dev-secret');
-            
-            // Verifica se o elemento existe antes de adicionar a ação (Isso evita o erro!)
-            if(elementoSecreto) {
-                elementoSecreto.addEventListener('click', () => {
-                    clicksSecretos++;
-                    if (clicksSecretos === 3) { 
-                        const senha = prompt("Acesso Mestre:");
-                        if(senha === "mestre123") { // Sua senha
-                             window.location.href = "dev.html";
-                        } else {
-                            clicksSecretos = 0; 
-                        }
-                    }
-                    // Reseta contador após 2 segundos
-                    setTimeout(() => { clicksSecretos = 0; }, 2000);
-                });
-            }
-        });
-    </script>
-    
     <script type="module" src="js/admin.js"></script>
 </body>
 </html>
