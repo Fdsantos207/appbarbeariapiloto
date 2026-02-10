@@ -1,0 +1,98 @@
+/* css/style-client.css */
+
+/* --- Variáveis de Cores (Mude aqui para alterar o tema todo) --- */
+:root {
+    --cor-primaria: #D4AF37; /* Dourado */
+    --cor-fundo: #1a1a1a;    /* Preto Fundo */
+    --cor-card: #2c2c2c;     /* Cinza Cards */
+    --cor-texto: #ffffff;
+    --botao-sucesso: #28a745; /* Verde */
+}
+
+/* Reset Básico */
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+body { background-color: var(--cor-fundo); color: var(--cor-texto); padding-bottom: 80px; }
+
+/* Notificações (Toast) */
+.toast {
+    visibility: hidden; min-width: 250px; margin-left: -125px;
+    background-color: #333; color: #fff; text-align: center; border-radius: 50px;
+    padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 80px;
+    box-shadow: 0px 4px 15px rgba(0,0,0,0.4); transform: translateY(100px); transition: 0.3s;
+}
+.toast.show { visibility: visible; transform: translateY(0); }
+.toast.erro { background-color: #dc3545; }
+.toast.sucesso { background-color: #28a745; }
+
+/* Cabeçalho */
+header {
+    display: flex; justify-content: space-between; align-items: center; padding: 15px 20px;
+    background: var(--cor-card); border-bottom: 2px solid var(--cor-primaria);
+    position: sticky; top: 0; z-index: 100;
+}
+
+/* Container Principal */
+.container {
+    padding: 20px; max-width: 600px; margin: 0 auto;
+    opacity: 0; pointer-events: none; transition: opacity 0.5s; /* Começa invisível */
+}
+.container.ativo { opacity: 1; pointer-events: all; } /* Fica visível quando carrega */
+
+/* Títulos das Seções */
+.section-title {
+    margin: 20px 0 10px; font-size: 1.1rem; color: #b0b0b0;
+    border-left: 4px solid var(--cor-primaria); padding-left: 10px;
+}
+
+/* Cards de Serviço */
+.servico-card {
+    background: var(--cor-card); padding: 15px; margin-bottom: 10px; border-radius: 10px;
+    display: flex; justify-content: space-between; align-items: center;
+    border: 1px solid transparent; cursor: pointer; transition: 0.2s;
+}
+.servico-card.selecionado { border-color: var(--cor-primaria); background-color: #333; }
+
+/* Calendário */
+input[type="date"] {
+    width: 100%; padding: 15px; background: var(--cor-card);
+    border: 1px solid #444; color: white; border-radius: 8px; margin-bottom: 20px;
+}
+
+/* Grade de Horários */
+.grade-horarios { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.horario-btn {
+    background: var(--cor-card); border: 1px solid #444; color: white;
+    padding: 10px; border-radius: 5px; font-size: 0.9rem; cursor: pointer;
+}
+.horario-btn.selecionado { background: var(--cor-primaria); color: var(--cor-fundo); font-weight: bold; }
+.horario-btn.ocupado {
+    background: #333; color: #555; text-decoration: line-through;
+    cursor: not-allowed; opacity: 0.6;
+}
+
+/* Botão Flutuante (Agendar) */
+.fab-container {
+    position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px;
+    background: #1a1a1a; border-top: 1px solid #333; display: flex; justify-content: center; z-index: 99;
+}
+.btn-agendar {
+    background: var(--botao-sucesso); color: white; border: none; padding: 15px 40px;
+    border-radius: 30px; font-weight: bold; width: 100%; max-width: 500px;
+    opacity: 0.5; pointer-events: none; transition: 0.3s;
+}
+.btn-agendar.ativo { opacity: 1; pointer-events: all; }
+
+/* Janelas Modais (Pop-ups) */
+.modal {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.9); z-index: 200; align-items: center; justify-content: center;
+}
+.modal-content {
+    background: var(--cor-card); padding: 30px; border-radius: 10px;
+    width: 90%; max-width: 400px; text-align: center; position: relative;
+}
+.modal input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: none; }
+.btn-confirmar {
+    background: var(--cor-primaria); color: black; font-weight: bold;
+    padding: 12px; width: 100%; border: none; border-radius: 5px; margin-top: 10px; cursor: pointer;
+}

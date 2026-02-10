@@ -1,0 +1,53 @@
+/* css/style-admin.css */
+
+:root {
+    --cor-fundo: #121212;
+    --cor-card: #1e1e1e;
+    --cor-destaque: #D4AF37; /* Dourado */
+    --verde-zap: #25D366;
+    --cinza: #333;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+body { background-color: var(--cor-fundo); color: #e0e0e0; padding: 20px; padding-bottom: 80px; }
+
+/* Navegação em Abas */
+.tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+.tab-btn {
+    flex: 1; padding: 15px; background: var(--cinza); color: #aaa;
+    border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
+}
+.tab-btn.ativo { background: var(--cor-destaque); color: var(--cor-fundo); }
+
+/* Conteúdo das Abas */
+.conteudo-aba { display: none; }
+.conteudo-aba.ativo { display: block; }
+
+/* Paineis e Formulários */
+.painel-controle { background: var(--cor-card); padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+input[type="date"], input[type="number"], input[type="text"] {
+    width: 100%; padding: 12px; background: #2a2a2a; border: 1px solid #444;
+    color: white; border-radius: 5px; margin-bottom: 15px;
+}
+
+/* Edição de Serviços */
+.form-group { margin-bottom: 20px; background: var(--cor-card); padding: 15px; border-radius: 10px; }
+.form-group label { display: block; margin-bottom: 8px; color: var(--cor-destaque); font-size: 0.9rem; }
+.lista-servicos-edit { display: flex; flex-direction: column; gap: 10px; }
+.item-servico { display: flex; gap: 10px; }
+.btn-salvar {
+    width: 100%; padding: 15px; background: var(--verde-zap); border: none;
+    border-radius: 8px; color: white; font-weight: bold; font-size: 1rem; cursor: pointer;
+}
+
+/* Cards da Lista de Clientes */
+.card-cliente {
+    background: var(--cor-card); padding: 15px; margin-bottom: 10px;
+    border-radius: 8px; border-left: 5px solid var(--cor-destaque);
+    display: flex; justify-content: space-between; align-items: center;
+}
+.btn-zap {
+    background: var(--verde-zap); color: white; width: 40px; height: 40px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    text-decoration: none; font-size: 1.2rem;
+}
