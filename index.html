@@ -5,23 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Barbearia App</title>
     <style>
+        /* --- ESTILOS GERAIS --- */
         :root { --cor-primaria: #D4AF37; --cor-fundo: #1a1a1a; --cor-card: #2c2c2c; --cor-texto: #ffffff; --botao-sucesso: #28a745; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
         body { background-color: var(--cor-fundo); color: var(--cor-texto); padding-bottom: 80px; }
         
-        /* Notificações */
-        .toast { visibility: hidden; min-width: 250px; margin-left: -125px; background-color: #333; color: #fff; text-align: center; border-radius: 50px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 80px; transform: translateY(100px); transition: 0.3s; }
+        /* Notificações Toast */
+        .toast { visibility: hidden; min-width: 250px; margin-left: -125px; background-color: #333; color: #fff; text-align: center; border-radius: 50px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 80px; box-shadow: 0px 4px 15px rgba(0,0,0,0.4); transform: translateY(100px); transition: 0.3s; }
         .toast.show { visibility: visible; transform: translateY(0); }
         .toast.erro { background-color: #dc3545; } .toast.sucesso { background-color: #28a745; }
 
+        /* Header e Botão Meus Cortes */
         header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: var(--cor-card); border-bottom: 2px solid var(--cor-primaria); position: sticky; top: 0; z-index: 100; }
         
-        .container { padding: 20px; max-width: 600px; margin: 0 auto; opacity: 0.5; pointer-events: none; transition: 0.3s; }
+        .container { padding: 20px; max-width: 600px; margin: 0 auto; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
         .container.ativo { opacity: 1; pointer-events: all; }
 
         .section-title { margin: 20px 0 10px; font-size: 1.1rem; color: #b0b0b0; border-left: 4px solid var(--cor-primaria); padding-left: 10px; }
         
-        .servico-card { background: var(--cor-card); padding: 15px; margin-bottom: 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid transparent; cursor: pointer; }
+        /* Cards de Serviço e Horários */
+        .servico-card { background: var(--cor-card); padding: 15px; margin-bottom: 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid transparent; cursor: pointer; transition: 0.2s; }
         .servico-card.selecionado { border-color: var(--cor-primaria); background-color: #333; }
         
         input[type="date"] { width: 100%; padding: 15px; background: var(--cor-card); border: 1px solid #444; color: white; border-radius: 8px; margin-bottom: 20px; }
@@ -29,255 +32,15 @@
         .grade-horarios { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
         .horario-btn { background: var(--cor-card); border: 1px solid #444; color: white; padding: 10px; border-radius: 5px; font-size: 0.9rem; cursor: pointer; }
         .horario-btn.selecionado { background: var(--cor-primaria); color: var(--cor-fundo); font-weight: bold; }
-        .horario-btn.ocupado { background: #333; color: #555; text-decoration: line-through; cursor: not-allowed; }
+        .horario-btn.ocupado { background: #333; color: #555; text-decoration: line-through; cursor: not-allowed; opacity: 0.6; }
 
+        /* Botão Flutuante */
         .fab-container { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px; background: #1a1a1a; border-top: 1px solid #333; display: flex; justify-content: center; z-index: 99; }
-        .btn-agendar { background: var(--botao-sucesso); color: white; border: none; padding: 15px 40px; border-radius: 30px; font-weight: bold; width: 100%; max-width: 500px; opacity: 0.5; pointer-events: none; }
+        .btn-agendar { background: var(--botao-sucesso); color: white; border: none; padding: 15px 40px; border-radius: 30px; font-weight: bold; width: 100%; max-width: 500px; opacity: 0.5; pointer-events: none; transition: 0.3s; }
         .btn-agendar.ativo { opacity: 1; pointer-events: all; }
 
+        /* Modais */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 200; align-items: center; justify-content: center; }
-        .modal-content { background: var(--cor-card); padding: 30px; border-radius: 10px; width: 90%; max-width: 400px; text-align: center; }
+        .modal-content { background: var(--cor-card); padding: 30px; border-radius: 10px; width: 90%; max-width: 400px; text-align: center; position: relative; }
         .modal input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: none; }
-        .btn-confirmar { background: var(--cor-primaria); color: black; font-weight: bold; padding: 12px; width: 100%; border: none; border-radius: 5px; margin-top: 10px; cursor: pointer;}
-    </style>
-</head>
-<body>
-
-    <header>
-        <h1 id="nome-barbearia" style="font-size: 1.2rem; margin:0;">Carregando...</h1>
-        <button onclick="verMeusAgendamentos()" style="background: transparent; border: 1px solid #444; color: var(--cor-primaria); padding: 8px 12px; border-radius: 20px; font-size: 0.8rem; cursor: pointer;">📅 Meus Cortes</button>
-    </header>
-
-    <div id="toast-box" class="toast">Notificação</div>
-
-    <div class="container" id="conteudo-principal">
-        <div class="section-title">1. Escolha o Serviço</div>
-        <div id="lista-servicos"><p style="text-align:center">Buscando serviços...</p></div>
-
-        <div class="section-title">2. Escolha a Data</div>
-        <input type="date" id="data-agendamento">
-
-        <div class="section-title">3. Escolha o Horário</div>
-        <div class="grade-horarios" id="lista-horarios"><p style="grid-column: span 4; text-align: center; color: #555;">Selecione data e serviço</p></div>
-    
-        <div style="margin-top:40px; text-align:center;">
-            <a href="admin.html" style="color:#444; text-decoration:none; font-size:0.8rem; border:1px solid #333; padding:5px 10px; border-radius:15px;">🔒 Área do Parceiro</a>
-        </div>
-    </div>
-
-    <div class="fab-container"><button id="btn-finalizar" class="btn-agendar">AGENDAR</button></div>
-
-    <div class="modal" id="modal-cadastro">
-        <div class="modal-content">
-            <h2 style="color:var(--cor-primaria)">Confirmar</h2>
-            <input type="text" id="cliente-nome" placeholder="Seu Nome">
-            <input type="tel" id="cliente-zap" placeholder="Seu WhatsApp">
-            <button class="btn-confirmar" onclick="finalizarAgendamento()">CONFIRMAR AGENDAMENTO</button>
-            <button onclick="document.getElementById('modal-cadastro').style.display='none'" style="background:transparent; border:none; color:#777; margin-top:15px; cursor:pointer">Cancelar</button>
-        </div>
-    </div>
-
-    <div class="modal" id="modal-historico">
-        <div class="modal-content" style="text-align: left;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
-                <h3 style="color:var(--cor-primaria)">Meus Agendamentos</h3>
-                <button onclick="document.getElementById('modal-historico').style.display='none'" style="background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;">&times;</button>
-            </div>
-            <div id="lista-historico" style="max-height: 300px; overflow-y: auto;"><p style="color:#777; text-align:center">Carregando...</p></div>
-        </div>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, where, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        // *** COLE SUAS CHAVES AQUI ***
-        const firebaseConfig = {
-            apiKey: "SUA_API_KEY_AQUI", // <--- NÃO ESQUEÇA DE COLOCAR A CHAVE AQUI
-            authDomain: "appbarbeariapiloto.firebaseapp.com",
-            projectId: "appbarbeariapiloto",
-            storageBucket: "appbarbeariapiloto.firebasestorage.app",
-            messagingSenderId: "132643765315",
-            appId: "1:132643765315:web:60568343cecfa5720268f6"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const ID_LOJA = "barbearia_central_01";
-        
-        let LOJA_CONFIG = {}; 
-        let selecao = { servico: null, data: null, horario: null };
-
-        window.mostrarToast = function(msg, tipo) {
-            const x = document.getElementById("toast-box");
-            x.innerText = msg; x.className = "toast show " + (tipo || "");
-            setTimeout(() => x.className = "toast", 3000);
-        }
-
-        // --- SISTEMA DE AUTO-CONFIGURAÇÃO ---
-        async function iniciarApp() {
-            try {
-                const docRef = doc(db, "lojas", ID_LOJA);
-                const docSnap = await getDoc(docRef);
-
-                if (docSnap.exists()) {
-                    // Se já existe, carrega normal
-                    LOJA_CONFIG = docSnap.data();
-                    renderizarApp();
-                } else {
-                    // SE NÃO EXISTE (O SEU CASO), ELE CRIA SOZINHO AGORA!
-                    console.log("Criando configuração padrão...");
-                    const configPadrao = {
-                        nome: "Barbearia Piloto",
-                        horarioInicio: 9,
-                        horarioFim: 19,
-                        intervaloMinutos: 45,
-                        servicos: [
-                            { id: 1, nome: "Corte Simples", preco: "R$ 35,00" },
-                            { id: 2, nome: "Barba", preco: "R$ 25,00" }
-                        ]
-                    };
-                    
-                    // Salva no banco
-                    await setDoc(docRef, configPadrao);
-                    
-                    // Usa a config criada
-                    LOJA_CONFIG = configPadrao;
-                    renderizarApp();
-                    mostrarToast("Sistema configurado automaticamente!", "sucesso");
-                }
-            } catch (error) {
-                console.error(error);
-                alert("Erro de conexão: " + error.message);
-            }
-        }
-        iniciarApp();
-
-        function renderizarApp() {
-            const titulo = document.getElementById('nome-barbearia');
-            if(titulo) titulo.innerText = LOJA_CONFIG.nome || "Barbearia Online"; 
-            
-            document.getElementById('conteudo-principal').classList.add('ativo');
-
-            const container = document.getElementById('lista-servicos');
-            container.innerHTML = '';
-            
-            if(LOJA_CONFIG.servicos) {
-                LOJA_CONFIG.servicos.forEach(serv => {
-                    const div = document.createElement('div');
-                    div.className = 'servico-card';
-                    div.innerHTML = `<div><h3>${serv.nome}</h3><p style="color:var(--cor-primaria)">${serv.preco}</p></div><div>➡️</div>`;
-                    div.onclick = () => {
-                        document.querySelectorAll('.servico-card').forEach(e => e.classList.remove('selecionado'));
-                        div.classList.add('selecionado');
-                        selecao.servico = serv;
-                        atualizarBotao();
-                    };
-                    container.appendChild(div);
-                });
-            }
-        }
-
-        const inputData = document.getElementById('data-agendamento');
-        inputData.min = new Date().toISOString().split("T")[0];
-        
-        inputData.addEventListener('change', async (e) => {
-            selecao.data = e.target.value;
-            const container = document.getElementById('lista-horarios');
-            container.innerHTML = '<p style="grid-column: span 4; text-align: center;">Verificando agenda...</p>';
-            
-            const q = query(collection(db, "agendamentos"), where("loja_id", "==", ID_LOJA), where("data", "==", selecao.data));
-            const snapshot = await getDocs(q);
-            const ocupados = [];
-            snapshot.forEach(doc => ocupados.push(doc.data().horario));
-
-            gerarGradeHorarios(ocupados);
-            atualizarBotao();
-        });
-
-        function gerarGradeHorarios(ocupados) {
-            const container = document.getElementById('lista-horarios');
-            container.innerHTML = '';
-            
-            let hora = LOJA_CONFIG.horarioInicio || 9;
-            let min = 0;
-            const fim = LOJA_CONFIG.horarioFim || 19;
-            const intervalo = LOJA_CONFIG.intervaloMinutos || 45;
-
-            while (hora < fim) {
-                const horarioStr = `${hora.toString().padStart(2,'0')}:${min.toString().padStart(2,'0')}`;
-                const btn = document.createElement('button');
-                btn.className = 'horario-btn';
-                btn.innerText = horarioStr;
-
-                if (ocupados.includes(horarioStr)) {
-                    btn.classList.add('ocupado');
-                    btn.onclick = () => mostrarToast(`Horário ${horarioStr} indisponível`, "erro");
-                } else {
-                    btn.onclick = () => {
-                        document.querySelectorAll('.horario-btn').forEach(e => e.classList.remove('selecionado'));
-                        btn.classList.add('selecionado');
-                        selecao.horario = horarioStr;
-                        atualizarBotao();
-                    };
-                }
-                container.appendChild(btn);
-                min += intervalo;
-                if(min >= 60) { hora++; min -= 60; }
-            }
-        }
-
-        function atualizarBotao() {
-            const btn = document.getElementById('btn-finalizar');
-            if(selecao.servico && selecao.data && selecao.horario) {
-                btn.classList.add('ativo'); btn.innerText = `AGENDAR (${selecao.horario})`;
-            } else {
-                btn.classList.remove('ativo'); btn.innerText = "AGENDAR";
-            }
-        }
-
-        document.getElementById('btn-finalizar').addEventListener('click', () => {
-            if(document.getElementById('btn-finalizar').classList.contains('ativo')) {
-                document.getElementById('modal-cadastro').style.display = 'flex';
-            }
-        });
-
-        window.finalizarAgendamento = async function() {
-            const nome = document.getElementById('cliente-nome').value;
-            const zap = document.getElementById('cliente-zap').value;
-            if(!nome || !zap) return mostrarToast("Preencha todos os campos!", "erro");
-
-            localStorage.setItem('user_nome', nome);
-            localStorage.setItem('user_zap', zap);
-
-            document.querySelector('.btn-confirmar').innerText = "Agendando...";
-
-            try {
-                await addDoc(collection(db, "agendamentos"), {
-                    loja_id: ID_LOJA,
-                    data: selecao.data,
-                    horario: selecao.horario,
-                    servico: selecao.servico.nome,
-                    cliente_nome: nome,
-                    cliente_zap: zap,
-                    criado_em: new Date()
-                });
-                mostrarToast("Agendado com Sucesso!", "sucesso");
-                setTimeout(() => location.reload(), 2000);
-            } catch (e) {
-                console.error(e);
-                mostrarToast("Erro ao agendar.", "erro");
-                document.querySelector('.btn-confirmar').innerText = "TENTAR NOVAMENTE";
-            }
-        }
-
-        window.verMeusAgendamentos = async function() {
-            const zapSalvo = localStorage.getItem('user_zap');
-            if (!zapSalvo) return mostrarToast("Você ainda não fez agendamentos.", "erro");
-
-            document.getElementById('modal-historico').style.display = 'flex';
-            const listaDiv = document.getElementById('lista-historico');
-            listaDiv.innerHTML = '<p style="text-align:center; color:#888; margin-top:20px">Buscando sua ficha...</p>';
-
-            try {
-                const q = query(collection(db, "agendamentos"), where("loja_id", "==", ID_LOJA),
+        .btn-confirmar { background: var(--cor-primaria); color: black; font-weight: bold
