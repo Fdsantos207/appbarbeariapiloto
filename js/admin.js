@@ -1,32 +1,33 @@
+// js/admin.js
+// VERSÃO: AGENDAMENTO ISOLADO (SUB-COLEÇÃO)
+
 import { db, ID_LOJA } from "./config.js";
 import { collection, query, where, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const configRef = doc(db, "lojas", ID_LOJA);
 
-// --- 1. LÓGICA DE LOGIN COM BANCO DE DADOS ---
+// --- 1. LOGIN ---
 window.fazerLogin = async function() {
     const senhaDigitada = document.getElementById('input-senha-login').value;
     const btn = document.querySelector('#modal-login button');
     
     if(!senhaDigitada) return alert("Digite a senha.");
-    
     btn.innerText = "Verificando...";
     
     try {
         const docSnap = await getDoc(configRef);
         if(docSnap.exists()) {
             const dados = docSnap.data();
-            // Verifica se a senha bate com a do banco
             if (dados.senhaAdmin === senhaDigitada) {
-                document.getElementById('modal-login').style.display = 'none'; // Some o modal
+                document.getElementById('modal-login').style.display = 'none';
                 sessionStorage.setItem("logado_loja_" + ID_LOJA, "sim");
-                carregarAgenda(); // Carrega os dados
+                carregarAgenda();
                 carregarConfiguracoesAdmin();
             } else {
                 alert("Senha incorreta!");
             }
         } else {
-            alert("Erro: Loja não encontrada.");
+            alert("Loja não encontrada. Verifique o link.");
         }
     } catch (e) {
         alert("Erro ao conectar: " + e.message);
@@ -34,14 +35,13 @@ window.fazerLogin = async function() {
     btn.innerText = "ENTRAR";
 }
 
-// Verifica se já estava logado antes (pra não pedir senha se der F5)
 if(sessionStorage.getItem("logado_loja_" + ID_LOJA) === "sim") {
     document.getElementById('modal-login').style.display = 'none';
     carregarAgenda();
     carregarConfiguracoesAdmin();
 }
 
-// --- 2. CARREGAR AGENDA ---
+// --- 2. CARREGAR AGENDA (ISOLADA) ---
 const inputData = document.getElementById('filtro-data');
 inputData.value = new Date().toISOString().split("T")[0];
 inputData.addEventListener('change', () => carregarAgenda());
@@ -51,7 +51,10 @@ async function carregarAgenda() {
     const container = document.getElementById('container-lista');
     container.innerHTML = '<p style="text-align:center">Buscando...</p>';
 
-    const q = query(collection(db, "agendamentos"), where("loja_id", "==", ID_LOJA), where("data", "==", data));
+    // MUDANÇA AQUI: Busca DENTRO da loja
+    const agendamentosRef = collection(db, "lojas", ID_LOJA, "agendamentos");
+    const q = query(agendamentosRef, where("data", "==", data));
+    
     const snapshot = await getDocs(q);
     
     let html = "";
@@ -77,7 +80,7 @@ async function carregarAgenda() {
     document.getElementById('resumo-dia').innerText = `${lista.length} Clientes Hoje`;
 }
 
-// --- 3. CONFIGURAÇÕES E SENHA ---
+// --- 3. CONFIGURAÇÕES ---
 async function carregarConfiguracoesAdmin() {
     const docSnap = await getDoc(configRef);
     if (docSnap.exists()) {
@@ -122,12 +125,11 @@ window.salvarConfiguracoes = async function() {
     try {
         await setDoc(configRef, {
             nome: nome, horarioInicio: inicio, horarioFim: fim, intervaloMinutos: intervalo, servicos: servicos
-        }, { merge: true }); // Merge true mantém a senha antiga e outros dados
+        }, { merge: true });
         alert("Salvo com sucesso!");
     } catch (e) { alert("Erro: " + e.message); }
 }
 
-// --- 4. ALTERAR SENHA (NOVO) ---
 window.salvarNovaSenha = async function() {
     const novaSenha = document.getElementById('nova-senha').value;
     if(!novaSenha) return alert("Digite uma senha!");
@@ -135,7 +137,7 @@ window.salvarNovaSenha = async function() {
     if(confirm("Tem certeza que deseja mudar a senha?")) {
         try {
             await setDoc(configRef, { senhaAdmin: novaSenha }, { merge: true });
-            alert("Senha alterada! Use a nova senha no próximo acesso.");
+            alert("Senha alterada!");
             document.getElementById('nova-senha').value = "";
         } catch (e) { alert("Erro: " + e.message); }
     }
