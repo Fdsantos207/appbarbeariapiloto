@@ -84,7 +84,11 @@
             <label>Nome</label> <input type="text" id="edit-nome">
             <label>Foto de Fundo</label> <input type="text" id="edit-foto">
             
-            <label style="color:var(--azul); font-weight:bold;">Status da Assinatura</label>
+            <label style="color:var(--azul);">🔑 Senha do Painel Admin</label> 
+            <input type="text" id="edit-senha" placeholder="Senha do parceiro">
+            <small style="color:#666">Você pode ver a senha atual ou digitar uma nova.</small>
+
+            <label style="color:var(--azul); font-weight:bold; margin-top:20px;">Status da Assinatura</label>
             <select id="edit-status">
                 <option value="true">✅ ATIVA (Pagamento OK)</option>
                 <option value="false">⛔ BLOQUEADA (Devendo)</option>
@@ -115,7 +119,7 @@
             if(aba === 'lista') carregarTodasLojas();
         }
 
-        // --- LISTAR TODAS (NOVO) ---
+        // --- LISTAR TODAS ---
         window.carregarTodasLojas = async function() {
             const container = document.getElementById('lista-lojas-container');
             container.innerHTML = '<p style="text-align:center">Buscando...</p>';
@@ -145,93 +149,4 @@
                             <div class="actions">
                                 <button class="btn-mini" onclick="editarDireto('${id}')">⚙️ Editar</button>
                                 <button class="btn-mini" onclick="copiarLink('${linkUrl}')">🔗 Copiar Link</button>
-                                <a href="${linkUrl}" target="_blank" class="btn-mini" style="text-decoration:none; display:inline-block;">↗️ Abrir</a>
-                            </div>
-                        </div>
-                    `;
-                });
-                container.innerHTML = html;
-            } catch (e) {
-                console.error(e);
-                container.innerHTML = `<p style="color:red">Erro ao listar: ${e.message}</p>`;
-            }
-        }
-        
-        // Inicia carregando a lista
-        carregarTodasLojas();
-
-        // Atalhos da Lista
-        window.editarDireto = function(id) {
-            mudarAba('editar');
-            document.getElementById('edit-id').value = id;
-            buscarLoja();
-        }
-        window.copiarLink = function(url) {
-            navigator.clipboard.writeText(url);
-            alert("Link copiado para o App!");
-        }
-
-        // --- LÓGICA DE CRIAÇÃO/EDIÇÃO (Mantida igual) ---
-        document.getElementById('nome-loja').addEventListener('input', (e) => {
-            document.getElementById('id-loja').value = e.target.value.toLowerCase().replace(/ /g, '_').replace(/[^\w-]+/g, '');
-        });
-
-        window.criarNovaLoja = async function() {
-            const nome = document.getElementById('nome-loja').value;
-            const id = document.getElementById('id-loja').value;
-            const foto = document.getElementById('foto-loja').value;
-
-            if(!nome || !id) return alert("Preencha nome e ID!");
-
-            try {
-                const docRef = doc(db, "lojas", id);
-                const docSnap = await getDoc(docRef);
-                if(docSnap.exists()) return alert("ID já existe!");
-
-                await setDoc(docRef, {
-                    nome: nome, senhaAdmin: "admin123", fotoFundo: foto || "", ativa: true,
-                    horarioInicio: 9, horarioFim: 19, intervaloMinutos: 45,
-                    servicos: [{ id: 0, nome: "Corte", preco: "R$ 35,00" }]
-                });
-
-                const baseUrl = window.location.origin;
-                document.getElementById('link-app').innerText = `${baseUrl}/index.html?loja=${id}`;
-                document.getElementById('res-criar').style.display = 'block';
-                carregarTodasLojas(); // Atualiza lista
-            } catch (e) { alert("Erro: " + e.message); }
-        }
-
-        window.buscarLoja = async function() {
-            const id = document.getElementById('edit-id').value;
-            if(!id) return alert("Digite o ID!");
-            try {
-                const docRef = doc(db, "lojas", id);
-                const docSnap = await getDoc(docRef);
-                if(!docSnap.exists()) return alert("Loja não encontrada!");
-                
-                const dados = docSnap.data();
-                document.getElementById('edit-nome').value = dados.nome;
-                document.getElementById('edit-foto').value = dados.fotoFundo || "";
-                document.getElementById('edit-status').value = (dados.ativa === false) ? "false" : "true";
-                document.getElementById('form-editar').style.display = 'block';
-            } catch (e) { alert("Erro: " + e.message); }
-        }
-
-        window.salvarEdicao = async function() {
-            const id = document.getElementById('edit-id').value;
-            const nome = document.getElementById('edit-nome').value;
-            const foto = document.getElementById('edit-foto').value;
-            const status = document.getElementById('edit-status').value === "true";
-            
-            try {
-                await updateDoc(doc(db, "lojas", id), { nome: nome, fotoFundo: foto, ativa: status });
-                alert("Salvo!");
-                carregarTodasLojas(); // Atualiza lista
-                mudarAba('lista');
-            } catch (e) { alert("Erro: " + e.message); }
-        }
-
-        window.copiar = (el) => { navigator.clipboard.writeText(el.innerText); alert("Copiado!"); }
-    </script>
-</body>
-</html>
+                                <a href="${linkUrl}" target="_blank" class
