@@ -1,5 +1,4 @@
 // js/admin.js
-// VERSÃO: AGENDAMENTO ISOLADO (SUB-COLEÇÃO)
 
 import { db, ID_LOJA } from "./config.js";
 import { collection, query, where, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -27,7 +26,7 @@ window.fazerLogin = async function() {
                 alert("Senha incorreta!");
             }
         } else {
-            alert("Loja não encontrada. Verifique o link.");
+            alert("Loja não encontrada.");
         }
     } catch (e) {
         alert("Erro ao conectar: " + e.message);
@@ -41,7 +40,7 @@ if(sessionStorage.getItem("logado_loja_" + ID_LOJA) === "sim") {
     carregarConfiguracoesAdmin();
 }
 
-// --- 2. CARREGAR AGENDA (ISOLADA) ---
+// --- 2. AGENDA ---
 const inputData = document.getElementById('filtro-data');
 inputData.value = new Date().toISOString().split("T")[0];
 inputData.addEventListener('change', () => carregarAgenda());
@@ -51,12 +50,10 @@ async function carregarAgenda() {
     const container = document.getElementById('container-lista');
     container.innerHTML = '<p style="text-align:center">Buscando...</p>';
 
-    // MUDANÇA AQUI: Busca DENTRO da loja
     const agendamentosRef = collection(db, "lojas", ID_LOJA, "agendamentos");
     const q = query(agendamentosRef, where("data", "==", data));
     
     const snapshot = await getDocs(q);
-    
     let html = "";
     let lista = [];
     snapshot.forEach(doc => lista.push(doc.data()));
@@ -80,7 +77,58 @@ async function carregarAgenda() {
     document.getElementById('resumo-dia').innerText = `${lista.length} Clientes Hoje`;
 }
 
-// --- 3. CONFIGURAÇÕES ---
+// --- 3. FINANCEIRO (NOVO) ---
+window.carregarFinanceiro = async function() {
+    // Busca TODOS os agendamentos da loja (ideal seria filtrar por mês no banco, mas faremos no front pra simplificar)
+    const agendamentosRef = collection(db, "lojas", ID_LOJA, "agendamentos");
+    const snapshot = await getDocs(agendamentosRef);
+    
+    let totalMes = 0;
+    let totalHoje = 0;
+    let qtdMes = 0;
+    
+    const hoje = new Date().toISOString().split("T")[0]; // "2023-10-25"
+    const mesAtual = hoje.slice(0, 7); // "2023-10"
+
+    // Busca tabela de preços atual pra referência
+    let precosMap = {};
+    const configSnap = await getDoc(configRef);
+    if(configSnap.exists()) {
+        configSnap.data().servicos.forEach(s => {
+            // Tenta limpar o preço pra numero: "R$ 35,00" -> 35.00
+            let valorNumerico = parseFloat(s.preco.replace('R$', '').replace(',', '.').trim());
+            if(!isNaN(valorNumerico)) precosMap[s.nome] = valorNumerico;
+        });
+    }
+
+    snapshot.forEach(doc => {
+        const item = doc.data();
+        
+        // Tenta descobrir o preço desse corte
+        // 1. Se salvou o preço no agendamento (ideal), usa ele. 
+        // 2. Se não, tenta achar pelo nome na tabela atual.
+        let valor = precosMap[item.servico] || 0; 
+
+        // Se o agendamento é deste mês
+        if (item.data.startsWith(mesAtual)) {
+            totalMes += valor;
+            qtdMes++;
+            
+            // Se também é de hoje
+            if (item.data === hoje) {
+                totalHoje += valor;
+            }
+        }
+    });
+
+    // Atualiza na tela
+    document.getElementById('fin-mes').innerText = totalMes.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    document.getElementById('fin-hoje').innerText = totalHoje.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    document.getElementById('fin-qtd').innerText = qtdMes;
+}
+
+
+// --- 4. CONFIGURAÇÕES E SENHA ---
 async function carregarConfiguracoesAdmin() {
     const docSnap = await getDoc(configRef);
     if (docSnap.exists()) {
