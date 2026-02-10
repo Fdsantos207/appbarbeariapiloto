@@ -19,7 +19,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // ID da Loja (Usado para identificar sua barbearia no banco de dados)
-const ID_LOJA = "novo visual";
+const ID_LOJA = "novo_stylo";
 
 // Exporta o banco de dados (db) e o ID para os outros arquivos usarem
 export { db, ID_LOJA };
