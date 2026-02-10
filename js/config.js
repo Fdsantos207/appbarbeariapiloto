@@ -5,13 +5,14 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase
 
 // --- ÁREA DE CONFIGURAÇÃO (COLE SUAS CHAVES REAIS AQUI) ---
 const firebaseConfig = {
-    apiKey: "SUA_API_KEY_AQUI",
-    authDomain: "SEU_PROJETO.firebaseapp.com",
-    projectId: "SEU_PROJETO",
-    storageBucket: "SEU_PROJETO.appspot.com",
-    messagingSenderId: "SEU_SENDER_ID",
-    appId: "SEU_APP_ID"
+  apiKey: "AIzaSyCEAeMxXbX047DhHYyAI-r4I_4eqlGA4W0",
+  authDomain: "appbarbeariapiloto.firebaseapp.com",
+  projectId: "appbarbeariapiloto",
+  storageBucket: "appbarbeariapiloto.firebasestorage.app",
+  messagingSenderId: "132643765315",
+  appId: "1:132643765315:web:60568343cecfa5720268f6"
 };
+
 
 // Inicializa o Firebase
 const app = initializeApp(firebaseConfig);
