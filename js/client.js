@@ -1,4 +1,4 @@
-// js/client.js - LÓGICA COMPLETA CORRIGIDA
+// js/client.js - VERSÃO COM DIAGNÓSTICO DE ERRO
 
 import { db, ID_LOJA, IMAGEM_PADRAO } from "./config.js";
 import { collection, getDocs, addDoc, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -8,15 +8,31 @@ let servicoSelecionado = null;
 let horarioSelecionado = null;
 let LOJA_CONFIG = null;
 
-// ELEMENTOS DOM
+// ELEMENTOS DOM (Com verificação para não travar se não existirem)
 const elData = document.getElementById('data-agendamento');
 const elModal = document.getElementById('modal-agendamento');
 
 // --- 1. INICIALIZAÇÃO ---
-window.onload = iniciarApp;
+window.onload = function() {
+    console.log("Sistema Iniciando...");
+    
+    // VERIFICAÇÃO DE SEGURANÇA 1: ID DA LOJA
+    if (!ID_LOJA) {
+        document.body.innerHTML = `
+            <div style="color:white; text-align:center; padding:50px; font-family:sans-serif;">
+                <h1>⚠️ Link Inválido</h1>
+                <p>Não sei qual barbearia carregar.</p>
+                <p>O link precisa ter o ID: <code>index.html?loja=NOME</code></p>
+            </div>`;
+        return;
+    }
+
+    iniciarApp();
+};
 
 async function iniciarApp() {
     try {
+        console.log("Buscando loja:", ID_LOJA);
         const docRef = doc(db, "lojas", ID_LOJA);
         const docSnap = await getDoc(docRef);
 
@@ -31,32 +47,38 @@ async function iniciarApp() {
 
             // Aplica Fundo e Nome
             aplicarBackground(LOJA_CONFIG.fotoFundo);
-            document.getElementById('nome-barbearia').innerText = LOJA_CONFIG.nome || "Barbearia";
+            const titulo = document.getElementById('nome-barbearia');
+            if(titulo) titulo.innerText = LOJA_CONFIG.nome || "Barbearia";
             
             // Carrega Serviços
             renderizarServicos();
             
             // Configura Data (Mínimo hoje)
-            elData.min = new Date().toISOString().split("T")[0];
-            elData.addEventListener('change', carregarHorarios);
+            if(elData) {
+                elData.min = new Date().toISOString().split("T")[0];
+                elData.addEventListener('change', carregarHorarios);
+            }
 
             // Animação de entrada
-            document.getElementById('conteudo-principal').classList.add('ativo');
+            const container = document.getElementById('conteudo-principal');
+            if(container) container.classList.add('ativo');
             
             // Recupera cliente salvo
             const clienteSalvo = localStorage.getItem('cliente_barbearia');
             if(clienteSalvo) {
                 const c = JSON.parse(clienteSalvo);
-                document.getElementById('cliente-nome').value = c.nome;
-                document.getElementById('cliente-zap').value = c.zap;
+                const inNome = document.getElementById('cliente-nome');
+                const inZap = document.getElementById('cliente-zap');
+                if(inNome) inNome.value = c.nome;
+                if(inZap) inZap.value = c.zap;
             }
 
         } else {
-            alert("Loja não encontrada!");
+            alert("Loja não encontrada no banco de dados! Verifique o ID.");
         }
     } catch (error) {
         console.error(error);
-        alert("Erro ao conectar.");
+        alert("Erro Crítico: " + error.message);
     }
 }
 
@@ -68,6 +90,8 @@ function aplicarBackground(url) {
 
 function renderizarServicos() {
     const div = document.getElementById('lista-servicos');
+    if(!div) return;
+    
     div.innerHTML = '';
     
     if(!LOJA_CONFIG.servicos || LOJA_CONFIG.servicos.length === 0) {
@@ -152,6 +176,8 @@ async function buscarAgendamentos(data) {
 // --- 4. AGENDAMENTO E MODAL ---
 function atualizarBotao() {
     const btn = document.getElementById('btn-finalizar');
+    if(!btn) return;
+    
     if (servicoSelecionado && horarioSelecionado && elData.value) {
         btn.classList.add('ativo');
         btn.style.opacity = '1';
@@ -161,68 +187,77 @@ function atualizarBotao() {
     }
 }
 
-// BOTÃO AGENDAR (Abre Modal)
-document.getElementById('btn-finalizar').onclick = () => {
-    if (!servicoSelecionado || !horarioSelecionado || !elData.value) {
-        return mostrarToast("Selecione serviço, data e horário!", "erro");
+// EVENTOS DE CLIQUE (Adicionados de forma segura)
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // BOTÃO AGENDAR (Abre Modal)
+    const btnAgendar = document.getElementById('btn-finalizar');
+    if(btnAgendar) {
+        btnAgendar.onclick = () => {
+            if (!servicoSelecionado || !horarioSelecionado || !elData.value) {
+                return mostrarToast("Selecione serviço, data e horário!", "erro");
+            }
+            if(elModal) elModal.classList.add('aberto');
+        };
     }
-    elModal.classList.add('aberto');
-};
 
-// BOTÃO CONFIRMAR (Salva)
-document.getElementById('btn-confirmar-modal').onclick = async () => {
-    const nome = document.getElementById('cliente-nome').value;
-    const zap = document.getElementById('cliente-zap').value;
-    const btn = document.getElementById('btn-confirmar-modal');
+    // BOTÃO CONFIRMAR (Salva)
+    const btnConfirmar = document.getElementById('btn-confirmar-modal');
+    if(btnConfirmar) {
+        btnConfirmar.onclick = async () => {
+            const nome = document.getElementById('cliente-nome').value;
+            const zap = document.getElementById('cliente-zap').value;
+            const btn = document.getElementById('btn-confirmar-modal');
 
-    if (!nome || !zap) return alert("Preencha seu nome e WhatsApp!");
+            if (!nome || !zap) return alert("Preencha seu nome e WhatsApp!");
 
-    btn.innerText = "AGENDANDO...";
-    btn.disabled = true;
+            btn.innerText = "AGENDANDO...";
+            btn.disabled = true;
 
-    try {
-        await addDoc(collection(db, "lojas", ID_LOJA, "agendamentos"), {
-            data: elData.value,
-            horario: horarioSelecionado,
-            servico: servicoSelecionado.nome,
-            preco: servicoSelecionado.preco,
-            cliente_nome: nome,
-            cliente_zap: zap,
-            criadoEm: new Date()
-        });
+            try {
+                await addDoc(collection(db, "lojas", ID_LOJA, "agendamentos"), {
+                    data: elData.value,
+                    horario: horarioSelecionado,
+                    servico: servicoSelecionado.nome,
+                    preco: servicoSelecionado.preco,
+                    cliente_nome: nome,
+                    cliente_zap: zap,
+                    criadoEm: new Date()
+                });
 
-        // Salva dados para próxima vez
-        localStorage.setItem('cliente_barbearia', JSON.stringify({ nome, zap }));
+                localStorage.setItem('cliente_barbearia', JSON.stringify({ nome, zap }));
 
-        fecharModal();
-        mostrarToast("Agendamento Confirmado! ✅", "sucesso");
-        
-        // Limpa tudo
-        setTimeout(() => location.reload(), 2000);
+                fecharModal();
+                mostrarToast("Agendamento Confirmado! ✅", "sucesso");
+                
+                setTimeout(() => location.reload(), 2000);
 
-    } catch (e) {
-        console.error(e);
-        alert("Erro ao agendar: " + e.message);
-        btn.innerText = "✅ CONFIRMAR";
-        btn.disabled = false;
+            } catch (e) {
+                console.error(e);
+                alert("Erro ao agendar: " + e.message);
+                btn.innerText = "✅ CONFIRMAR";
+                btn.disabled = false;
+            }
+        };
     }
-};
+});
 
 window.fecharModal = function() {
-    elModal.classList.remove('aberto');
+    if(elModal) elModal.classList.remove('aberto');
 };
 
 // --- EXTRAS ---
 window.toggleMenu = () => {
-    document.getElementById('sidebar').classList.toggle('aberto');
-    document.getElementById('overlay-menu').classList.toggle('aberto');
+    const sb = document.getElementById('sidebar');
+    const ov = document.getElementById('overlay-menu');
+    if(sb) sb.classList.toggle('aberto');
+    if(ov) ov.classList.toggle('aberto');
 };
 
 window.verMeusAgendamentos = async () => {
     const zap = prompt("Digite seu WhatsApp para buscar:");
     if(!zap) return;
     
-    // Lógica simples de busca (idealmente seria uma tela própria)
     const q = query(collection(db, "lojas", ID_LOJA, "agendamentos"), where("cliente_zap", "==", zap));
     const snap = await getDocs(q);
     
@@ -249,6 +284,7 @@ function renderizarTelaBloqueio() {
 
 function mostrarToast(msg, tipo) {
     const t = document.getElementById('toast');
+    if(!t) return;
     t.innerText = msg;
     t.className = `toast show ${tipo}`;
     setTimeout(() => t.className = 'toast', 3000);
