@@ -3,64 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel do Desenvolvedor</title>
+    <title>Painel Master (Dev)</title>
     <style>
-        :root { --cor-fundo: #0d1117; --cor-card: #161b22; --azul: #58a6ff; }
+        :root { --cor-fundo: #0d1117; --cor-card: #161b22; --azul: #58a6ff; --verde: #238636; --vermelho: #da3633; }
         * { box-sizing: border-box; font-family: sans-serif; }
-        body { background: var(--cor-fundo); color: #c9d1d9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { background: var(--cor-card); padding: 40px; border-radius: 10px; width: 100%; max-width: 500px; }
-        input { width: 100%; padding: 12px; margin-top: 5px; background: #0d1117; border: 1px solid #30363d; color: white; border-radius: 6px; }
-        button { width: 100%; padding: 15px; margin-top: 25px; background: #238636; color: white; border: none; cursor: pointer; font-weight: bold; border-radius: 6px;}
-        .resultado { margin-top: 30px; padding: 15px; background: rgba(88, 166, 255, 0.1); border: 1px solid var(--azul); display: none; border-radius: 6px;}
-        .link-box { background: #0d1117; padding: 10px; margin-top: 5px; color: var(--azul); word-break: break-all; cursor: pointer; border-radius: 4px;}
+        body { background: var(--cor-fundo); color: #c9d1d9; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        
+        .container { background: var(--cor-card); padding: 30px; border-radius: 10px; width: 100%; max-width: 500px; margin-bottom: 20px; border: 1px solid #30363d; }
+        h2 { margin-top: 0; color: var(--azul); text-align: center; }
+        
+        label { display: block; margin-top: 15px; color: #8b949e; font-size: 0.9rem; }
+        input, select { width: 100%; padding: 12px; margin-top: 5px; background: #0d1117; border: 1px solid #30363d; color: white; border-radius: 6px; }
+        input:focus, select:focus { border-color: var(--azul); outline: none; }
+        
+        button { width: 100%; padding: 15px; margin-top: 25px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; transition: 0.2s; }
+        .btn-criar { background: var(--verde); color: white; }
+        .btn-atualizar { background: var(--azul); color: white; }
+        button:hover { opacity: 0.9; }
+
+        .resultado { margin-top: 20px; padding: 15px; background: rgba(35, 134, 54, 0.2); border: 1px solid var(--verde); display: none; border-radius: 6px; }
+        .link-box { background: #0d1117; padding: 10px; margin-top: 5px; color: var(--azul); word-break: break-all; cursor: pointer; border-radius: 4px; font-family: monospace; }
+        
+        .tab-btn { background: none; border: none; color: #8b949e; padding: 10px; cursor: pointer; font-size: 1rem; }
+        .tab-btn.ativo { color: white; border-bottom: 2px solid var(--azul); }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #30363d; width: 100%; max-width: 500px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1 style="text-align:center; color:var(--azul)">🏭 Fábrica de Lojas</h1>
-        <label>Nome da Barbearia</label> <input type="text" id="nome-loja">
-        <label style="display:block; margin-top:15px">ID (Slug)</label> <input type="text" id="id-loja">
-        <button onclick="criarNovaLoja()">CRIAR LOJA</button>
 
-        <div id="resultado" class="resultado">
-            <h3 style="margin:0; color:#238636">Sucesso!</h3>
-            <p>Envie este link para o Median (Website URL):</p>
+    <div class="tabs">
+        <button class="tab-btn ativo" onclick="mudarAba('criar')">Nova Loja</button>
+        <button class="tab-btn" onclick="mudarAba('editar')">Gerenciar Loja</button>
+    </div>
+
+    <div id="aba-criar" class="container">
+        <h2>🏭 Fábrica de Lojas</h2>
+        <label>Nome da Barbearia</label> <input type="text" id="nome-loja" placeholder="Ex: Barbearia do Zé">
+        <label>ID (Slug)</label> <input type="text" id="id-loja" placeholder="ze_barber">
+        <label>Foto de Fundo (Opcional)</label> <input type="text" id="foto-loja" placeholder="Link da imagem (https://...)">
+        
+        <button class="btn-criar" onclick="criarNovaLoja()">CRIAR LOJA</button>
+
+        <div id="res-criar" class="resultado">
+            <h3 style="margin:0; color:var(--verde)">Sucesso!</h3>
+            <p>Link para o Median:</p>
             <div class="link-box" onclick="copiar(this)" id="link-app">...</div>
         </div>
     </div>
 
-    <script type="module">
-        import { db } from "./js/config.js"; // Usa sua config central
-        import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    <div id="aba-editar" class="container" style="display:none;">
+        <h2>👮‍♂️ Controle de Acesso</h2>
+        <label>ID da Loja</label> <input type="text" id="edit-id" placeholder="Ex: ze_barber">
+        <button onclick="buscarLoja()" style="margin-top:10px; background:#333; color:white; padding:8px;">🔍 Buscar Dados</button>
+        
+        <div id="form-editar" style="display:none; border-top: 1px solid #333; margin-top:20px; padding-top:10px;">
+            <label>Nome</label> <input type="text" id="edit-nome">
+            <label>Foto de Fundo</label> <input type="text" id="edit-foto">
+            
+            <label style="color:var(--azul); font-weight:bold;">Status da Assinatura</label>
+            <select id="edit-status">
+                <option value="true">✅ ATIVA (Pagamento OK)</option>
+                <option value="false">⛔ BLOQUEADA (Devendo)</option>
+            </select>
 
-        // Formata ID automático
+            <button class="btn-atualizar" onclick="salvarEdicao()">SALVAR ALTERAÇÕES</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db } from "./js/config.js";
+        import { doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        window.mudarAba = function(aba) {
+            document.querySelectorAll('.container').forEach(e => e.style.display = 'none');
+            document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('ativo'));
+            document.getElementById(`aba-${aba}`).style.display = 'block';
+            event.target.classList.add('ativo');
+        }
+
         document.getElementById('nome-loja').addEventListener('input', (e) => {
             document.getElementById('id-loja').value = e.target.value.toLowerCase().replace(/ /g, '_').replace(/[^\w-]+/g, '');
         });
 
+        // CRIAR (Já nasce Ativa)
         window.criarNovaLoja = async function() {
             const nome = document.getElementById('nome-loja').value;
             const id = document.getElementById('id-loja').value;
-            if(!nome || !id) return alert("Preencha tudo!");
+            const foto = document.getElementById('foto-loja').value;
+
+            if(!nome || !id) return alert("Preencha nome e ID!");
 
             try {
                 const docRef = doc(db, "lojas", id);
                 const docSnap = await getDoc(docRef);
                 if(docSnap.exists()) return alert("ID já existe!");
 
-                // CRIA A LOJA COM SENHA PADRÃO 'admin123'
                 await setDoc(docRef, {
                     nome: nome,
-                    senhaAdmin: "admin123", // <--- IMPORTANTE: Senha inicial
+                    senhaAdmin: "admin123",
+                    fotoFundo: foto || "",
+                    ativa: true, // <--- NOVA LOJA NASCE ATIVA
                     horarioInicio: 9, horarioFim: 19, intervaloMinutos: 45,
                     servicos: [{ id: 0, nome: "Corte", preco: "R$ 35,00" }]
                 });
 
-                // Gera apenas o link do APP (Cliente)
-                const baseUrl = window.location.origin; // Pega o link do Vercel atual
+                const baseUrl = window.location.origin;
                 document.getElementById('link-app').innerText = `${baseUrl}/index.html?loja=${id}`;
-                document.getElementById('resultado').style.display = 'block';
+                document.getElementById('res-criar').style.display = 'block';
             } catch (e) { alert("Erro: " + e.message); }
+        }
+
+        // BUSCAR
+        window.buscarLoja = async function() {
+            const id = document.getElementById('edit-id').value;
+            if(!id) return alert("Digite o ID!");
+            
+            try {
+                const docRef = doc(db, "lojas", id);
+                const docSnap = await getDoc(docRef);
+                if(!docSnap.exists()) return alert("Loja não encontrada!");
+                
+                const dados = docSnap.data();
+                document.getElementById('edit-nome').value = dados.nome;
+                document.getElementById('edit-foto').value = dados.fotoFundo || "";
+                
+                // Carrega o status (se não tiver o campo, assume true)
+                const status = (dados.ativa === false) ? "false" : "true";
+                document.getElementById('edit-status').value = status;
+
+                document.getElementById('form-editar').style.display = 'block';
+            } catch (e) { alert("Erro ao buscar: " + e.message); }
+        }
+
+        // SALVAR (Incluindo Bloqueio)
+        window.salvarEdicao = async function() {
+            const id = document.getElementById('edit-id').value;
+            const nome = document.getElementById('edit-nome').value;
+            const foto = document.getElementById('edit-foto').value;
+            const status = document.getElementById('edit-status').value === "true"; // Converte pra Boleano
+            
+            try {
+                await updateDoc(doc(db, "lojas", id), {
+                    nome: nome,
+                    fotoFundo: foto,
+                    ativa: status // <--- ATUALIZA O STATUS NO BANCO
+                });
+                alert(status ? "Loja ATIVADA com sucesso!" : "Loja BLOQUEADA com sucesso!");
+                location.reload();
+            } catch (e) { alert("Erro ao salvar: " + e.message); }
         }
 
         window.copiar = (el) => { navigator.clipboard.writeText(el.innerText); alert("Copiado!"); }
