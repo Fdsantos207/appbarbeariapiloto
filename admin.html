@@ -31,33 +31,42 @@
 <body>
 
     <div id="modal-login">
-        <div class="login-box">
-            <h2 style="color:#D4AF37; margin-bottom:20px;">Área Restrita</h2>
-            <p style="color:#888; margin-bottom:15px;">Digite sua senha de parceiro</p>
-            <input type="password" id="input-senha-login" placeholder="Senha" style="width:100%; padding:10px; margin-bottom:15px; background:#333; border:1px solid #444; color:white;">
-            <button onclick="fazerLogin()" style="width:100%; padding:12px; background:#D4AF37; border:none; font-weight:bold; cursor:pointer;">ENTRAR</button>
-            <a href="index.html" style="display:block; margin-top:15px; color:#666; font-size:0.8rem; text-decoration:none;">← Voltar ao App</a>
-       <div class="login-box">
-    <a href="index.html" style="display:block; margin-top:15px; color:#666; font-size:0.8rem; text-decoration:none;">← Voltar ao App</a>
-    
-    <p id="dev-secret" style="margin-top:30px; color:#222; font-size:0.7rem; cursor:default; user-select:none;">v1.0</p>
-</div>
+    <div class="login-box">
+        <h2 style="color:#D4AF37; margin-bottom:20px;">Área Restrita</h2>
+        <p style="color:#888; margin-bottom:15px;">Digite sua senha de parceiro</p>
+        
+        <input type="password" id="input-senha-login" placeholder="Senha" style="width:100%; padding:10px; margin-bottom:15px; background:#333; border:1px solid #444; color:white;">
+        
+        <button onclick="fazerLogin()" style="width:100%; padding:12px; background:#D4AF37; border:none; font-weight:bold; cursor:pointer;">ENTRAR</button>
+        
+        <a href="index.html" style="display:block; margin-top:15px; color:#666; font-size:0.8rem; text-decoration:none;">← Voltar ao App</a>
+
+        <p id="dev-secret" style="margin-top:30px; color:#222; font-size:0.7rem; cursor:default; user-select:none;">v1.0</p>
+        </div> </div>
 
 <script>
     let clicksSecretos = 0;
-    document.getElementById('dev-secret').addEventListener('click', () => {
-        clicksSecretos++;
-        if (clicksSecretos === 3) { // Se clicar 3 vezes
-            const senha = prompt("Acesso Mestre:");
-            if(senha === "mestre123") { // Sua senha
-                 window.location.href = "dev.html";
-            } else {
-                clicksSecretos = 0; // Reseta se errar
+    const elementoSecreto = document.getElementById('dev-secret');
+    
+    if(elementoSecreto) {
+        elementoSecreto.addEventListener('click', () => {
+            clicksSecretos++;
+            if (clicksSecretos === 3) { // No 3º clique rápido
+                const senha = prompt("Acesso Mestre:");
+                if(senha === "mestre123") { // Sua senha que definimos no dev.html
+                     window.location.href = "dev.html";
+                } else {
+                    clicksSecretos = 0; // Reseta se errar
+                }
             }
-        }
-    });
+            // Reseta os cliques se demorar mais de 2 segundos entre um e outro
+            setTimeout(() => { clicksSecretos = 0; }, 2000);
+        });
+    }
 </script>
-    </div>
+
+</body>
+</html>
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
         <button onclick="toggleMenu()" style="background:none; border:none; color:#D4AF37; font-size:1.8rem; cursor:pointer;">☰</button>
