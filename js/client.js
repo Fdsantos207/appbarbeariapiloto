@@ -1,22 +1,21 @@
-// js/client.js
+// js/client.js - LÓGICA COMPLETA CORRIGIDA
+
 import { db, ID_LOJA, IMAGEM_PADRAO } from "./config.js";
 import { collection, getDocs, addDoc, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Variáveis
+// VARIÁVEIS GLOBAIS
 let servicoSelecionado = null;
 let horarioSelecionado = null;
 let LOJA_CONFIG = null;
 
+// ELEMENTOS DOM
 const elData = document.getElementById('data-agendamento');
 const elModal = document.getElementById('modal-agendamento');
 
-// INÍCIO
-window.onload = async function() {
-    if (!ID_LOJA) {
-        alert("Link inválido! Use o link gerado no painel.");
-        return;
-    }
+// --- 1. INICIALIZAÇÃO ---
+window.onload = iniciarApp;
 
+async function iniciarApp() {
     try {
         const docRef = doc(db, "lojas", ID_LOJA);
         const docSnap = await getDoc(docRef);
@@ -24,49 +23,57 @@ window.onload = async function() {
         if (docSnap.exists()) {
             LOJA_CONFIG = docSnap.data();
 
+            // Verifica Bloqueio
             if (LOJA_CONFIG.ativa === false) {
-                document.body.innerHTML = "<h1 style='color:white;text-align:center;padding:50px'>Barbearia Indisponível</h1>";
+                renderizarTelaBloqueio();
                 return;
             }
 
-            // Aplica foto e nome
-            const img = LOJA_CONFIG.fotoFundo || IMAGEM_PADRAO;
-            document.documentElement.style.setProperty('--bg-loja', `url('${img}')`);
-            document.getElementById('nome-barbearia').innerText = LOJA_CONFIG.nome;
-
-            // Renderiza
+            // Aplica Fundo e Nome
+            aplicarBackground(LOJA_CONFIG.fotoFundo);
+            document.getElementById('nome-barbearia').innerText = LOJA_CONFIG.nome || "Barbearia";
+            
+            // Carrega Serviços
             renderizarServicos();
             
-            // Configura Data
+            // Configura Data (Mínimo hoje)
             elData.min = new Date().toISOString().split("T")[0];
             elData.addEventListener('change', carregarHorarios);
 
-            // Mostra tela
+            // Animação de entrada
             document.getElementById('conteudo-principal').classList.add('ativo');
-
-            // Recupera dados antigos
-            const salvo = localStorage.getItem('cliente_barbearia');
-            if(salvo) {
-                const c = JSON.parse(salvo);
+            
+            // Recupera cliente salvo
+            const clienteSalvo = localStorage.getItem('cliente_barbearia');
+            if(clienteSalvo) {
+                const c = JSON.parse(clienteSalvo);
                 document.getElementById('cliente-nome').value = c.nome;
                 document.getElementById('cliente-zap').value = c.zap;
             }
 
         } else {
-            alert("Barbearia não encontrada!");
+            alert("Loja não encontrada!");
         }
-    } catch (e) {
-        console.error(e);
-        alert("Erro ao carregar: " + e.message);
+    } catch (error) {
+        console.error(error);
+        alert("Erro ao conectar.");
     }
-};
+}
 
-// FUNÇÕES
+// --- 2. FUNÇÕES VISUAIS ---
+function aplicarBackground(url) {
+    const img = url || IMAGEM_PADRAO;
+    document.documentElement.style.setProperty('--bg-loja', `url('${img}')`);
+}
+
 function renderizarServicos() {
     const div = document.getElementById('lista-servicos');
     div.innerHTML = '';
     
-    if(!LOJA_CONFIG.servicos) return;
+    if(!LOJA_CONFIG.servicos || LOJA_CONFIG.servicos.length === 0) {
+        div.innerHTML = '<p>Nenhum serviço cadastrado.</p>';
+        return;
+    }
 
     LOJA_CONFIG.servicos.forEach(serv => {
         const el = document.createElement('div');
@@ -83,40 +90,31 @@ function renderizarServicos() {
     });
 }
 
+// --- 3. HORÁRIOS ---
 async function carregarHorarios() {
     const data = elData.value;
-    const div = document.getElementById('grade-horarios');
+    const divHorarios = document.getElementById('grade-horarios');
     
-    if(!data) return;
-    div.innerHTML = '<p style="grid-column:span 4; text-align:center; color:#888">Buscando...</p>';
+    if (!data) return;
     
+    divHorarios.innerHTML = '<p style="grid-column:span 4; text-align:center">Carregando...</p>';
     horarioSelecionado = null;
     atualizarBotao();
 
-    // Calcula horários
-    let horarios = [];
-    let atual = LOJA_CONFIG.horarioInicio * 60;
-    const fim = LOJA_CONFIG.horarioFim * 60;
+    // Gera horários possíveis
+    const horarios = gerarHorarios(LOJA_CONFIG.horarioInicio, LOJA_CONFIG.horarioFim, LOJA_CONFIG.intervaloMinutos);
     
-    while(atual < fim) {
-        const h = Math.floor(atual / 60).toString().padStart(2, '0');
-        const m = (atual % 60).toString().padStart(2, '0');
-        horarios.push(`${h}:${m}`);
-        atual += LOJA_CONFIG.intervaloMinutos;
-    }
-
-    // Busca Ocupados
-    const q = query(collection(db, "lojas", ID_LOJA, "agendamentos"), where("data", "==", data));
-    const snap = await getDocs(q);
-    const ocupados = snap.docs.map(d => d.data().horario);
-
-    div.innerHTML = '';
+    // Busca ocupados
+    const ocupados = await buscarAgendamentos(data);
+    
+    divHorarios.innerHTML = '';
+    
     horarios.forEach(hora => {
         const btn = document.createElement('div');
         btn.className = 'horario-btn';
         btn.innerText = hora;
         
-        if(ocupados.includes(hora)) {
+        if (ocupados.includes(hora)) {
             btn.classList.add('ocupado');
         } else {
             btn.onclick = () => {
@@ -124,15 +122,37 @@ async function carregarHorarios() {
                 btn.classList.add('selecionado');
                 horarioSelecionado = hora;
                 atualizarBotao();
-            }
+            };
         }
-        div.appendChild(btn);
+        divHorarios.appendChild(btn);
     });
 }
 
+function gerarHorarios(inicio, fim, intervalo) {
+    let lista = [];
+    let atual = inicio * 60; // Converte para minutos
+    const fimMinutos = fim * 60;
+    
+    while (atual < fimMinutos) {
+        const h = Math.floor(atual / 60);
+        const m = atual % 60;
+        const horaFormatada = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+        lista.push(horaFormatada);
+        atual += intervalo;
+    }
+    return lista;
+}
+
+async function buscarAgendamentos(data) {
+    const q = query(collection(db, "lojas", ID_LOJA, "agendamentos"), where("data", "==", data));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => doc.data().horario);
+}
+
+// --- 4. AGENDAMENTO E MODAL ---
 function atualizarBotao() {
     const btn = document.getElementById('btn-finalizar');
-    if(servicoSelecionado && horarioSelecionado && elData.value) {
+    if (servicoSelecionado && horarioSelecionado && elData.value) {
         btn.classList.add('ativo');
         btn.style.opacity = '1';
     } else {
@@ -141,20 +161,21 @@ function atualizarBotao() {
     }
 }
 
-// EVENTOS DE BOTÃO
+// BOTÃO AGENDAR (Abre Modal)
 document.getElementById('btn-finalizar').onclick = () => {
-    if(!servicoSelecionado || !horarioSelecionado || !elData.value) {
-        return alert("Selecione Serviço, Data e Horário!");
+    if (!servicoSelecionado || !horarioSelecionado || !elData.value) {
+        return mostrarToast("Selecione serviço, data e horário!", "erro");
     }
     elModal.classList.add('aberto');
 };
 
+// BOTÃO CONFIRMAR (Salva)
 document.getElementById('btn-confirmar-modal').onclick = async () => {
     const nome = document.getElementById('cliente-nome').value;
     const zap = document.getElementById('cliente-zap').value;
     const btn = document.getElementById('btn-confirmar-modal');
 
-    if(!nome || !zap) return alert("Preencha todos os dados!");
+    if (!nome || !zap) return alert("Preencha seu nome e WhatsApp!");
 
     btn.innerText = "AGENDANDO...";
     btn.disabled = true;
@@ -170,14 +191,19 @@ document.getElementById('btn-confirmar-modal').onclick = async () => {
             criadoEm: new Date()
         });
 
+        // Salva dados para próxima vez
         localStorage.setItem('cliente_barbearia', JSON.stringify({ nome, zap }));
-        
-        alert("Agendamento realizado com sucesso! ✅");
-        location.reload();
 
-    } catch(e) {
-        alert("Erro: " + e.message);
-        btn.innerText = "TENTAR NOVAMENTE";
+        fecharModal();
+        mostrarToast("Agendamento Confirmado! ✅", "sucesso");
+        
+        // Limpa tudo
+        setTimeout(() => location.reload(), 2000);
+
+    } catch (e) {
+        console.error(e);
+        alert("Erro ao agendar: " + e.message);
+        btn.innerText = "✅ CONFIRMAR";
         btn.disabled = false;
     }
 };
@@ -186,18 +212,44 @@ window.fecharModal = function() {
     elModal.classList.remove('aberto');
 };
 
-window.toggleMenu = function() {
+// --- EXTRAS ---
+window.toggleMenu = () => {
     document.getElementById('sidebar').classList.toggle('aberto');
     document.getElementById('overlay-menu').classList.toggle('aberto');
 };
 
-window.verMeusAgendamentos = async function() {
-    const zap = prompt("Seu WhatsApp:");
+window.verMeusAgendamentos = async () => {
+    const zap = prompt("Digite seu WhatsApp para buscar:");
     if(!zap) return;
+    
+    // Lógica simples de busca (idealmente seria uma tela própria)
     const q = query(collection(db, "lojas", ID_LOJA, "agendamentos"), where("cliente_zap", "==", zap));
     const snap = await getDocs(q);
-    if(snap.empty) return alert("Nenhum agendamento.");
-    let msg = "Seus horários:\n";
-    snap.forEach(d => { const a = d.data(); msg += `${a.data} - ${a.horario}\n` });
-    alert(msg);
+    
+    if(snap.empty) {
+        alert("Nenhum agendamento encontrado.");
+    } else {
+        let msg = "Seus Agendamentos:\n\n";
+        snap.forEach(d => {
+            const ag = d.data();
+            msg += `${ag.data} às ${ag.horario} - ${ag.servico}\n`;
+        });
+        alert(msg);
+    }
 };
+
+function renderizarTelaBloqueio() {
+    document.body.innerHTML = `
+        <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; text-align:center; padding:20px; background:#121212; color:white;">
+            <div style="font-size:4rem; margin-bottom:20px;">🛠️</div>
+            <h2 style="color:#D4AF37;">Barbearia Indisponível</h2>
+            <p>Entre em contato com o estabelecimento.</p>
+        </div>`;
+}
+
+function mostrarToast(msg, tipo) {
+    const t = document.getElementById('toast');
+    t.innerText = msg;
+    t.className = `toast show ${tipo}`;
+    setTimeout(() => t.className = 'toast', 3000);
+}
