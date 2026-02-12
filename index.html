@@ -2,75 +2,74 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Barbearia App</title>
-    
-    <meta name="theme-color" content="#121212">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style-client.css">
 </head>
 <body>
 
-    <div id="sidebar" class="sidebar">
-        <div class="sidebar-header">
-            <h3>Menu</h3>
-            <button id="btn-fechar-menu">✕</button>
-        </div>
-        <nav>
-            <a href="#" id="link-meus-agendamentos">📜 Meus Agendamentos</a>
-            <hr style="border:0; border-top:1px solid #333; margin:10px 0;">
-            <a href="admin.html">💼 Área do Parceiro</a>
-        </nav>
-    </div>
-    <div id="overlay-menu" class="overlay"></div>
-
     <header>
         <h1 id="nome-barbearia">Carregando...</h1>
-        <div id="btn-abrir-menu" style="font-size:1.5rem; color:#D4AF37; cursor:pointer;">☰</div>
+        <button onclick="toggleMenu()" style="background:none; border:none; color:var(--cor-dourado-solido); font-size:1.5rem; cursor:pointer;">☰</button>
     </header>
 
-    <div id="conteudo-principal" class="container">
+    <div id="sidebar" class="sidebar">
         
-        <div class="section-title">1. Escolha o serviço</div>
-        <div id="lista-servicos">
-            <p style="text-align:center; color:#666">Buscando serviços...</p>
+        <div class="sidebar-header">
+            <h3>Menu</h3>
+            <button onclick="toggleMenu()">✕</button>
         </div>
+        <nav>
+           <a href="#" onclick="verMeusAgendamentos(); toggleMenu()">📜 Meus Agendamentos</a>
+<hr style="border:0; border-top:1px solid #333; margin:10px 0;">
+<a href="admin.html">💼 Área do Parceiro</a>
+        </nav>
+    </div>
+    <div id="overlay" class="overlay" onclick="toggleMenu()"></div>
 
-        <div class="section-title">2. Escolha a data</div>
+    <div id="toast-box" class="toast">Notificação</div>
+
+    <div class="container" id="conteudo-principal">
+        <div class="section-title">1. Escolha o Serviço</div>
+        <div id="lista-servicos"><p style="text-align:center; color:#666">Buscando serviços...</p></div>
+
+        <div class="section-title">2. Escolha a Data</div>
         <input type="date" id="data-agendamento">
 
-        <div class="section-title">3. Escolha o horário</div>
-        <div id="grade-horarios" class="grade-horarios">
-            <p style="grid-column: span 4; text-align:center; color:#666; font-size:0.9rem;">Selecione uma data acima</p>
-        </div>
-        
-        <div style="height:100px;"></div> 
+        <div class="section-title">3. Escolha o Horário</div>
+        <div class="grade-horarios" id="lista-horarios"><p style="grid-column: span 4; text-align: center; color: #555;">Selecione data e serviço</p></div>
     </div>
 
-    <div class="fab-container">
-        <button id="btn-abrir-modal" class="btn-agendar">💈 AGENDAR</button>
-    </div>
+    <div class="fab-container"><button id="btn-finalizar" class="btn-agendar">💈 AGENDAR</button>
 
-    <div id="modal-agendamento" class="modal">
+    <div class="modal" id="modal-cadastro">
         <div class="modal-content">
-            <h3 style="color:#D4AF37; margin-bottom:15px">Finalizar Agendamento</h3>
-            
-            <div style="text-align:left; margin-bottom:5px; color:#ccc; font-size:0.9rem">Seu Nome:</div>
-            <input type="text" id="cliente-nome" placeholder="Digite seu nome aqui" autocomplete="off">
-            
-            <div style="text-align:left; margin-bottom:5px; color:#ccc; font-size:0.9rem">Seu WhatsApp:</div>
-            <input type="tel" id="cliente-zap" placeholder="(00) 00000-0000" autocomplete="off">
-            
-            <button id="btn-salvar-agendamento" class="btn-confirmar">✅ CONFIRMAR</button>
-            <button id="btn-cancelar-modal" style="background:transparent; color:#666; border:none; margin-top:15px; padding:10px; width:100%; cursor:pointer;">Cancelar</button>
+            <h2 style="color:var(--cor-dourado-solido)">Confirmar</h2>
+            <input type="text" id="cliente-nome" placeholder="Seu Nome">
+            <input type="tel" id="cliente-zap" placeholder="Seu WhatsApp">
+            <button class="btn-confirmar" onclick="finalizarAgendamento()">CONFIRMAR AGENDAMENTO</button>
+            <button onclick="document.getElementById('modal-cadastro').style.display='none'" style="background:transparent; border:none; color:#777; margin-top:15px; cursor:pointer">Cancelar</button>
         </div>
     </div>
 
-    <div id="toast" class="toast"></div>
+    <div class="modal" id="modal-historico">
+        <div class="modal-content" style="text-align: left;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
+                <h3 style="color:var(--cor-dourado-solido)">Meus Agendamentos</h3>
+                <button onclick="document.getElementById('modal-historico').style.display='none'" style="background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            <div id="lista-historico" style="max-height: 300px; overflow-y: auto;"><p style="color:#777; text-align:center">Carregando...</p></div>
+        </div>
+    </div>
 
+    <script>
+        function toggleMenu() {
+            document.getElementById('sidebar').classList.toggle('aberto');
+            document.getElementById('overlay').classList.toggle('aberto');
+        }
+    </script>
     <script type="module" src="js/client.js"></script>
 </body>
 </html>
