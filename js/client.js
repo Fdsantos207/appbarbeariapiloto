@@ -1,256 +1,214 @@
 // js/client.js
+// VERSÃO: AGENDAMENTO ISOLADO (SUB-COLEÇÃO)
 
-// 1. SISTEMA ANTI-TRAVAMENTO (Mostra erro na tela se falhar)
-window.onerror = function(msg, source, lineno) {
-    document.body.innerHTML = `
-        <div style="background:darkred; color:white; padding:20px; text-align:center; font-family:sans-serif; margin-top:50px;">
-            <h2>❌ Ocorreu um Erro</h2>
-            <p>${msg}</p>
-            <p>Linha: ${lineno}</p>
-            <button onclick="location.reload()" style="padding:10px; margin-top:10px;">Tentar Recarregar</button>
-        </div>`;
-};
+import { db, ID_LOJA } from "./config.js";
+import { collection, addDoc, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-import { db, ID_LOJA, IMAGEM_PADRAO } from "./config.js";
-import { collection, getDocs, addDoc, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+let LOJA_CONFIG = {}; 
+let selecao = { servico: null, data: null, horario: null };
 
-// Variáveis Globais
-let servicoSelecionado = null;
-let horarioSelecionado = null;
-let LOJA_CONFIG = null;
+window.mostrarToast = function(msg, tipo) {
+    const x = document.getElementById("toast-box");
+    x.innerText = msg;
+    x.className = "toast show " + (tipo || "");
+    setTimeout(() => x.className = "toast", 3000);
+}
 
-// Elementos
-const elData = document.getElementById('data-agendamento');
-const elModal = document.getElementById('modal-agendamento');
-const btnAgendar = document.getElementById('btn-abrir-modal');
-
-// INICIALIZAÇÃO
-window.onload = async function() {
-    console.log("Iniciando App...");
-
-    if (!ID_LOJA) {
-        throw new Error("Link sem ID da loja (ex: ?loja=nome)");
-    }
-
+// --- 1. INICIALIZAÇÃO ---
+async function iniciarApp() {
     try {
         const docRef = doc(db, "lojas", ID_LOJA);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
             LOJA_CONFIG = docSnap.data();
-
-            if (LOJA_CONFIG.ativa === false) {
-                document.body.innerHTML = "<h1 style='color:white;text-align:center;margin-top:50px'>Loja Bloqueada</h1>";
-                return;
-            }
-
-            // Aplica Visual
-            const img = LOJA_CONFIG.fotoFundo || IMAGEM_PADRAO;
-            document.documentElement.style.setProperty('--bg-loja', `url('${img}')`);
-            
-            const titulo = document.getElementById('nome-barbearia');
-            if(titulo) titulo.innerText = LOJA_CONFIG.nome;
-
-            // Carrega Serviços
-            renderizarServicos();
-
-            // Configura Data
-            if(elData) {
-                elData.min = new Date().toISOString().split("T")[0];
-                elData.addEventListener('change', carregarHorarios);
-            }
-
-            // Destrava a tela
-            const container = document.getElementById('conteudo-principal');
-            if(container) {
-                container.style.opacity = '1';
-                container.style.transform = 'translateY(0)';
-            }
-            
-            // Muda o texto de carregando
-            if(titulo && titulo.innerText === "Carregando...") titulo.innerText = "Barbearia";
-
-            // Recupera Cliente
-            const salvo = localStorage.getItem('cliente_barbearia');
-            if(salvo) {
-                const c = JSON.parse(salvo);
-                const inNome = document.getElementById('cliente-nome');
-                const inZap = document.getElementById('cliente-zap');
-                if(inNome) inNome.value = c.nome;
-                if(inZap) inZap.value = c.zap;
-            }
-
-            // ATIVA OS BOTÕES
-            ativarEventos();
-
+            renderizarApp();
         } else {
-            throw new Error("Barbearia não encontrada no Banco de Dados.");
+            document.getElementById('nome-barbearia').innerText = "Loja não encontrada";
+            alert("Atenção: Esta loja não foi configurada corretamente ou não existe.");
         }
-    } catch (e) {
-        throw e; // Joga para o tratador de erro lá em cima
+    } catch (error) {
+        console.error(error);
+        alert("Erro ao conectar: " + error.message);
     }
-};
-
-function ativarEventos() {
-    // Botão Agendar (Abre Modal)
-    if(btnAgendar) {
-        btnAgendar.addEventListener('click', () => {
-            if (!servicoSelecionado || !horarioSelecionado || !elData.value) {
-                alert("Selecione Serviço, Data e Horário!");
-                return;
-            }
-            if(elModal) {
-                elModal.style.display = 'flex'; // Força abrir
-                elModal.classList.add('aberto');
-            }
-        });
-    }
-
-    // Botão Confirmar (Salva)
-    const btnSalvar = document.getElementById('btn-salvar-agendamento');
-    if(btnSalvar) {
-        btnSalvar.addEventListener('click', salvarNoFirebase);
-    }
-
-    // Botão Cancelar
-    const btnCancelar = document.getElementById('btn-cancelar-modal');
-    if(btnCancelar) {
-        btnCancelar.addEventListener('click', () => {
-            if(elModal) elModal.style.display = 'none';
-        });
-    }
-
-    // Menu
-    const btnMenu = document.getElementById('btn-abrir-menu');
-    if(btnMenu) btnMenu.addEventListener('click', toggleMenu);
-    
-    const btnFecharMenu = document.getElementById('btn-fechar-menu');
-    if(btnFecharMenu) btnFecharMenu.addEventListener('click', toggleMenu);
-    
-    const overlay = document.getElementById('overlay-menu');
-    if(overlay) overlay.addEventListener('click', toggleMenu);
 }
 
-// --- LÓGICA DO APP ---
-
-function renderizarServicos() {
-    const div = document.getElementById('lista-servicos');
-    if(!div) return;
-    div.innerHTML = '';
+function renderizarApp() {
+    const titulo = document.getElementById('nome-barbearia');
+    if(titulo) titulo.innerText = LOJA_CONFIG.nome || "Barbearia"; 
     
-    if(!LOJA_CONFIG.servicos) return;
-
-    LOJA_CONFIG.servicos.forEach(serv => {
-        const el = document.createElement('div');
-        el.className = 'servico-card';
-        el.innerHTML = `<div><h3>${serv.nome}</h3><p>${serv.preco}</p></div><div>✂️</div>`;
-        
-        el.onclick = () => {
-            document.querySelectorAll('.servico-card').forEach(e => e.classList.remove('selecionado'));
-            el.classList.add('selecionado');
-            servicoSelecionado = serv;
-            atualizarBotao();
-        };
-        div.appendChild(el);
-    });
+    document.getElementById('conteudo-principal').classList.add('ativo');
+    const container = document.getElementById('lista-servicos');
+    container.innerHTML = '';
+    
+    if(LOJA_CONFIG.servicos && LOJA_CONFIG.servicos.length > 0) {
+        LOJA_CONFIG.servicos.forEach(serv => {
+            const div = document.createElement('div');
+            div.className = 'servico-card';
+            div.innerHTML = `<div><h3>${serv.nome}</h3><p style="color:var(--cor-dourado-solido)">${serv.preco}</p></div><div>➡️</div>`;
+            div.onclick = () => {
+                document.querySelectorAll('.servico-card').forEach(e => e.classList.remove('selecionado'));
+                div.classList.add('selecionado');
+                selecao.servico = serv;
+                atualizarBotao();
+            };
+            container.appendChild(div);
+        });
+    } else {
+        container.innerHTML = '<p style="text-align:center; color:orange">Nenhum serviço cadastrado.</p>';
+    }
 }
 
-async function carregarHorarios() {
-    const data = elData.value;
-    const div = document.getElementById('grade-horarios');
+// --- 2. BUSCA DE HORÁRIOS (ISOLADA) ---
+const inputData = document.getElementById('data-agendamento');
+inputData.min = new Date().toISOString().split("T")[0];
+
+inputData.addEventListener('change', async (e) => {
+    selecao.data = e.target.value;
+    const container = document.getElementById('lista-horarios');
+    container.innerHTML = '<p style="grid-column: span 4; text-align: center;">Verificando agenda...</p>';
     
-    if(!data) return;
-    div.innerHTML = '<p style="grid-column:span 4; text-align:center">Carregando...</p>';
+    // MUDANÇA AQUI: Entra na pasta da loja especifica
+    const agendamentosRef = collection(db, "lojas", ID_LOJA, "agendamentos");
+    // Não precisa mais filtrar por loja_id, pois já estamos dentro da loja certa
+    const q = query(agendamentosRef, where("data", "==", selecao.data));
     
-    horarioSelecionado = null;
+    const snapshot = await getDocs(q);
+    const ocupados = [];
+    snapshot.forEach(doc => ocupados.push(doc.data().horario));
+
+    gerarGradeHorarios(ocupados);
     atualizarBotao();
+});
 
-    let horarios = [];
-    let atual = LOJA_CONFIG.horarioInicio * 60;
-    const fim = LOJA_CONFIG.horarioFim * 60;
+function gerarGradeHorarios(ocupados) {
+    const container = document.getElementById('lista-horarios');
+    container.innerHTML = '';
     
-    while(atual < fim) {
-        const h = Math.floor(atual / 60).toString().padStart(2, '0');
-        const m = (atual % 60).toString().padStart(2, '0');
-        horarios.push(`${h}:${m}`);
-        atual += LOJA_CONFIG.intervaloMinutos;
-    }
+    let hora = LOJA_CONFIG.horarioInicio || 9;
+    let min = 0;
+    const fim = LOJA_CONFIG.horarioFim || 19;
+    const intervalo = LOJA_CONFIG.intervaloMinutos || 45;
 
-    const q = query(collection(db, "lojas", ID_LOJA, "agendamentos"), where("data", "==", data));
-    const snap = await getDocs(q);
-    const ocupados = snap.docs.map(d => d.data().horario);
-
-    div.innerHTML = '';
-    horarios.forEach(hora => {
-        const btn = document.createElement('div');
+    while (hora < fim) {
+        const horarioStr = `${hora.toString().padStart(2,'0')}:${min.toString().padStart(2,'0')}`;
+        const btn = document.createElement('button');
         btn.className = 'horario-btn';
-        btn.innerText = hora;
-        
-        if(ocupados.includes(hora)) {
+        btn.innerText = horarioStr;
+
+        if (ocupados.includes(horarioStr)) {
             btn.classList.add('ocupado');
+            btn.onclick = () => mostrarToast(`Horário ${horarioStr} indisponível`, "erro");
         } else {
             btn.onclick = () => {
-                document.querySelectorAll('.horario-btn').forEach(b => b.classList.remove('selecionado'));
+                document.querySelectorAll('.horario-btn').forEach(e => e.classList.remove('selecionado'));
                 btn.classList.add('selecionado');
-                horarioSelecionado = hora;
+                selecao.horario = horarioStr;
                 atualizarBotao();
             };
         }
-        div.appendChild(btn);
-    });
+        container.appendChild(btn);
+        min += intervalo;
+        if(min >= 60) { hora++; min -= 60; }
+    }
 }
 
 function atualizarBotao() {
-    if(servicoSelecionado && horarioSelecionado && elData.value) {
-        btnAgendar.classList.add('ativo');
-        btnAgendar.style.opacity = '1';
+    const btn = document.getElementById('btn-finalizar');
+    if(selecao.servico && selecao.data && selecao.horario) {
+        btn.classList.add('ativo');
+        btn.innerText = `AGENDAR (${selecao.horario})`;
     } else {
-        btnAgendar.classList.remove('ativo');
-        btnAgendar.style.opacity = '0.4';
+        btn.classList.remove('ativo');
+        btn.innerText = "AGENDAR";
     }
 }
 
-async function salvarNoFirebase() {
+document.getElementById('btn-finalizar').addEventListener('click', () => {
+    if(document.getElementById('btn-finalizar').classList.contains('ativo')) {
+        document.getElementById('modal-cadastro').style.display = 'flex';
+    }
+});
+
+window.addEventListener('load', () => {
+    if(localStorage.getItem('user_nome')) document.getElementById('cliente-nome').value = localStorage.getItem('user_nome');
+    if(localStorage.getItem('user_zap')) document.getElementById('cliente-zap').value = localStorage.getItem('user_zap');
+    iniciarApp();
+});
+
+// --- 3. FINALIZAR AGENDAMENTO (SALVAR ISOLADO) ---
+window.finalizarAgendamento = async function() {
     const nome = document.getElementById('cliente-nome').value;
     const zap = document.getElementById('cliente-zap').value;
-    const btn = document.getElementById('btn-salvar-agendamento');
+    
+    if(!nome || !zap) return mostrarToast("Preencha todos os campos!", "erro");
 
-    if(!nome || !zap) {
-        alert("Preencha Nome e WhatsApp");
-        return;
-    }
-
-    btn.innerText = "AGENDANDO...";
-    btn.disabled = true;
+    localStorage.setItem('user_nome', nome);
+    localStorage.setItem('user_zap', zap);
+    document.querySelector('.btn-confirmar').innerText = "Agendando...";
 
     try {
-        await addDoc(collection(db, "lojas", ID_LOJA, "agendamentos"), {
-            data: elData.value,
-            horario: horarioSelecionado,
-            servico: servicoSelecionado.nome,
-            preco: servicoSelecionado.preco,
+        // MUDANÇA AQUI: Salva DENTRO da loja
+        const agendamentosRef = collection(db, "lojas", ID_LOJA, "agendamentos");
+
+        await addDoc(agendamentosRef, {
+            data: selecao.data,
+            horario: selecao.horario,
+            servico: selecao.servico.nome,
             cliente_nome: nome,
             cliente_zap: zap,
-            criadoEm: new Date()
+            criado_em: new Date()
         });
-
-        localStorage.setItem('cliente_barbearia', JSON.stringify({ nome, zap }));
-        alert("Agendamento Confirmado! ✅");
-        location.reload();
-
-    } catch(e) {
-        alert("Erro: " + e.message);
-        btn.innerText = "TENTAR NOVAMENTE";
-        btn.disabled = false;
+        
+        mostrarToast("Agendado com Sucesso!", "sucesso");
+        setTimeout(() => location.reload(), 2000);
+    } catch (e) {
+        console.error(e);
+        mostrarToast("Erro ao agendar.", "erro");
+        document.querySelector('.btn-confirmar').innerText = "TENTAR NOVAMENTE";
     }
 }
 
-function toggleMenu() {
-    const sb = document.getElementById('sidebar');
-    const ov = document.getElementById('overlay-menu');
-    if(sb) sb.classList.toggle('aberto');
-    if(ov) {
-        if(ov.style.display === 'block') ov.style.display = 'none';
-        else ov.style.display = 'block';
+// --- 4. MEUS AGENDAMENTOS (BUSCA ISOLADA) ---
+window.verMeusAgendamentos = async function() {
+    const zapSalvo = localStorage.getItem('user_zap');
+    if (!zapSalvo) return mostrarToast("Você ainda não fez agendamentos.", "erro");
+
+    document.getElementById('modal-historico').style.display = 'flex';
+    const listaDiv = document.getElementById('lista-historico');
+    listaDiv.innerHTML = '<p style="text-align:center; color:#888; margin-top:20px">Buscando sua ficha...</p>';
+
+    try {
+        // MUDANÇA AQUI: Busca DENTRO da loja
+        const agendamentosRef = collection(db, "lojas", ID_LOJA, "agendamentos");
+        const q = query(agendamentosRef, where("cliente_zap", "==", zapSalvo));
+        
+        const snapshot = await getDocs(q);
+        
+        if (snapshot.empty) {
+            listaDiv.innerHTML = '<p style="text-align:center; margin-top:20px">Nenhum agendamento nesta loja.</p>';
+            return;
+        }
+
+        let html = "";
+        const lista = [];
+        snapshot.forEach(doc => lista.push(doc.data()));
+        lista.sort((a,b) => (a.data + a.horario).localeCompare(b.data + b.horario));
+
+        lista.forEach(item => {
+            const dataFormatada = item.data.split('-').reverse().slice(0,2).join('/');
+            html += `
+                <div style="background:#222; padding:12px; margin-bottom:10px; border-radius:8px; border-left: 3px solid var(--cor-dourado-solido);">
+                    <div style="display:flex; justify-content:space-between;">
+                        <span style="font-weight:bold; color:#fff">${dataFormatada} às ${item.horario}</span>
+                        <span style="color:var(--cor-dourado-solido); font-size:0.8rem">Agendado</span>
+                    </div>
+                    <div style="color:#aaa; font-size:0.9rem; margin-top:5px;">${item.servico}</div>
+                </div>`;
+        });
+        listaDiv.innerHTML = html;
+    } catch (e) {
+        console.error(e);
+        listaDiv.innerHTML = `<p style="color:red; text-align:center">Erro ao buscar.</p>`;
     }
 }
