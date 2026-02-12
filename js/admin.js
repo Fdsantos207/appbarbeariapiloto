@@ -1,14 +1,16 @@
-// js/admin.js
+// js/admin.js - COM FUNÇÃO DE EXCLUIR AGENDAMENTO
+
 import { db, ID_LOJA } from "./config.js";
-import { collection, query, where, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+// Adicionei 'deleteDoc' na importação abaixo
+import { collection, query, where, getDocs, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const SENHA_MESTRA = "mestre123";
 
 window.onload = function() {
-    // 1. CARREGA A FOTO IMEDIATAMENTE (Essa é a correção)
+    // Carrega fundo
     carregarFundoLoja();
 
-    // 2. Configura botões
+    // Configura botões
     document.getElementById('btn-entrar-painel').addEventListener('click', fazerLogin);
     document.getElementById('btn-abrir-menu-admin').addEventListener('click', toggleMenu);
     document.getElementById('overlay').addEventListener('click', toggleMenu);
@@ -26,26 +28,37 @@ window.onload = function() {
     document.getElementById('btn-salvar-conf').addEventListener('click', salvarConfiguracoes);
     document.getElementById('btn-salvar-senha').addEventListener('click', salvarNovaSenha);
 
-    // 3. Auto-login se já estiver logado
+    // Auto-login
     if(sessionStorage.getItem("logado_loja_" + ID_LOJA) === "sim") {
         document.getElementById('modal-login').style.display = 'none';
         iniciarPainel();
     }
 };
 
-// --- NOVA FUNÇÃO: CARREGA O FUNDO ---
+// --- NOVA FUNÇÃO: DELETAR AGENDAMENTO ---
+window.deletarAgendamento = async function(idAgendamento) {
+    if(confirm("Tem certeza que deseja cancelar este agendamento? O horário ficará livre novamente.")) {
+        try {
+            await deleteDoc(doc(db, "lojas", ID_LOJA, "agendamentos", idAgendamento));
+            alert("Agendamento excluído com sucesso!");
+            carregarAgenda(); // Atualiza a lista na hora
+            carregarFinanceiro(); // Atualiza o dinheiro também
+        } catch(e) {
+            console.error(e);
+            alert("Erro ao excluir: " + e.message);
+        }
+    }
+}
+
 async function carregarFundoLoja() {
     if(!ID_LOJA) return;
     try {
         const docRef = doc(db, "lojas", ID_LOJA);
         const snap = await getDoc(docRef);
         if(snap.exists() && snap.data().fotoFundo) {
-            // Injeta a foto na variável do CSS
             document.documentElement.style.setProperty('--bg-loja', `url('${snap.data().fotoFundo}')`);
         }
-    } catch(e) {
-        console.log("Erro ao carregar fundo:", e);
-    }
+    } catch(e) { console.log("Erro fundo:", e); }
 }
 
 async function fazerLogin() {
@@ -75,7 +88,6 @@ function iniciarPainel() {
     carregarAgenda(); 
     carregarFinanceiro(); 
     carregarConfiguracoesAdmin();
-    // O fundo já foi carregado no início, não precisa carregar de novo aqui
 }
 
 function toggleMenu() { document.getElementById('sidebar').classList.toggle('aberto'); document.getElementById('overlay').classList.toggle('aberto'); }
@@ -86,6 +98,7 @@ function mudarTela(tela) {
     if(tela === 'financeiro') carregarFinanceiro();
 }
 
+// --- AGENDA COM BOTÃO DE EXCLUIR ---
 async function carregarAgenda() {
     const inputData = document.getElementById('filtro-data');
     const data = inputData.value || new Date().toISOString().split("T")[0];
@@ -95,14 +108,38 @@ async function carregarAgenda() {
 
     const q = query(collection(db, "lojas", ID_LOJA, "agendamentos"), where("data", "==", data));
     const snapshot = await getDocs(q);
-    let html = ""; let lista = [];
-    snapshot.forEach(doc => lista.push(doc.data()));
+    
+    let lista = [];
+    // AGORA GUARDAMOS O ID DO DOCUMENTO TAMBÉM
+    snapshot.forEach(doc => {
+        lista.push({ id: doc.id, ...doc.data() });
+    });
+    
     lista.sort((a, b) => a.horario.localeCompare(b.horario));
     
-    if(lista.length === 0) container.innerHTML = '<p style="text-align:center; padding:20px; color:#555">Sem cortes hoje.</p>';
+    if(lista.length === 0) {
+        container.innerHTML = '<p style="text-align:center; padding:20px; color:#555">Sem cortes hoje.</p>';
+        return;
+    }
+
+    let html = ""; 
     lista.forEach(item => {
         const zapLink = item.cliente_zap.replace(/\D/g, ''); 
-        html += `<div class="card-cliente"><div><span style="font-size:1.2rem; font-weight:bold; color:white; margin-right:10px">${item.horario}</span><span style="color:white;">${item.cliente_nome}</span> <br><small style="color:#888">${item.servico}</small></div><a href="https://wa.me/55${zapLink}" target="_blank" style="background:#25D366; color:white; padding:8px 12px; border-radius:50%; text-decoration:none;">📱</a></div>`;
+        
+        html += `
+            <div class="card-cliente">
+                <div style="flex:1;">
+                    <span style="font-size:1.2rem; font-weight:bold; color:white; margin-right:10px">${item.horario}</span>
+                    <span style="color:white;">${item.cliente_nome}</span> <br>
+                    <small style="color:#888">${item.servico} - ${item.preco}</small>
+                </div>
+                
+                <div style="display:flex; gap:10px;">
+                    <a href="https://wa.me/55${zapLink}" target="_blank" style="background:#25D366; color:white; width:35px; height:35px; border-radius:50%; display:flex; align-items:center; justify-content:center; text-decoration:none; font-size:1.2rem;">📱</a>
+                    
+                    <button onclick="deletarAgendamento('${item.id}')" style="background:#d9534f; color:white; width:35px; height:35px; border:none; border-radius:50%; cursor:pointer; font-size:1rem;">🗑️</button>
+                </div>
+            </div>`;
     });
     container.innerHTML = html;
 }
