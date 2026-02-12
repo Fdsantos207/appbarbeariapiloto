@@ -1,43 +1,24 @@
 // js/config.js
-
+// Importa as ferramentas do Firebase que vamos usar
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// --- SUAS CHAVES ---
+// --- ÁREA DE CONFIGURAÇÃO (COLE SUAS CHAVES REAIS AQUI) ---
 const firebaseConfig = {
-  apiKey: "AIzaSyCEAeMxXbX047DhHYyAI-r4I_4eqlGA4W0",
-  authDomain: "appbarbeariapiloto.firebaseapp.com",
-  projectId: "appbarbeariapiloto",
-  storageBucket: "appbarbeariapiloto.firebasestorage.app",
-  messagingSenderId: "132643765315",
-  appId: "1:132643765315:web:60568343cecfa5720268f6"
+    apiKey: "SUA_API_KEY_AQUI",
+    authDomain: "SEU_PROJETO.firebaseapp.com",
+    projectId: "SEU_PROJETO",
+    storageBucket: "SEU_PROJETO.appspot.com",
+    messagingSenderId: "SEU_SENDER_ID",
+    appId: "SEU_APP_ID"
 };
 
+// Inicializa o Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// --- A MÁGICA DO MULTI-LOJAS ---
+// ID da Loja (Usado para identificar sua barbearia no banco de dados)
+const ID_LOJA = "barbearia_central_01";
 
-// 1. Tenta pegar o ID da URL (ex: site.com?loja=barbearia_ze)
-const urlParams = new URLSearchParams(window.location.search);
-let lojaUrl = urlParams.get('loja');
-
-// 2. Se não tiver na URL, tenta pegar da memória do navegador (se o cliente já entrou antes)
-if (!lojaUrl) {
-    lojaUrl = localStorage.getItem('loja_ativa');
-}
-
-// 3. Se achou uma loja, salva na memória para não perder se ele atualizar a página
-if (lojaUrl) {
-    localStorage.setItem('loja_ativa', lojaUrl);
-} else {
-    // 4. Se não achou NADA (é a primeira vez e sem link), usa uma loja padrão ou avisa erro
-    // Sugestão: Deixe 'barbearia_central_01' como fallback ou redirecione para uma página de erro
-    lojaUrl = "barbearia_central_01"; 
-    // console.warn("Nenhuma loja especificada. Usando padrão.");
-}
-
-const ID_LOJA = lojaUrl;
-
-// Exporta
+// Exporta o banco de dados (db) e o ID para os outros arquivos usarem
 export { db, ID_LOJA };

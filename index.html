@@ -4,30 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Barbearia App</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style-client.css">
 </head>
 <body>
 
     <header>
-        <h1 id="nome-barbearia">Carregando...</h1>
-        <button onclick="toggleMenu()" style="background:none; border:none; color:var(--cor-dourado-solido); font-size:1.5rem; cursor:pointer;">☰</button>
+        <h1 id="nome-barbearia" style="font-size: 1.2rem; margin:0;">Carregando...</h1>
+        <button onclick="verMeusAgendamentos()" style="background: transparent; border: 1px solid #444; color: var(--cor-primaria); padding: 8px 12px; border-radius: 20px; font-size: 0.8rem; cursor: pointer;">📅 Meus Cortes</button>
     </header>
-
-    <div id="sidebar" class="sidebar">
-        
-        <div class="sidebar-header">
-            <h3>Menu</h3>
-            <button onclick="toggleMenu()">✕</button>
-        </div>
-        <nav>
-           <a href="#" onclick="verMeusAgendamentos(); toggleMenu()">📜 Meus Agendamentos</a>
-<hr style="border:0; border-top:1px solid #333; margin:10px 0;">
-<a href="admin.html">💼 Área do Parceiro</a>
-        </nav>
-    </div>
-    <div id="overlay" class="overlay" onclick="toggleMenu()"></div>
 
     <div id="toast-box" class="toast">Notificação</div>
 
@@ -40,13 +24,17 @@
 
         <div class="section-title">3. Escolha o Horário</div>
         <div class="grade-horarios" id="lista-horarios"><p style="grid-column: span 4; text-align: center; color: #555;">Selecione data e serviço</p></div>
+    
+        <div style="margin-top:40px; text-align:center;">
+            <a href="admin.html" style="color:#444; text-decoration:none; font-size:0.8rem; border:1px solid #333; padding:5px 10px; border-radius:15px;">🔒 Área do Parceiro</a>
+        </div>
     </div>
 
-    <div class="fab-container"><button id="btn-finalizar" class="btn-agendar">💈 AGENDAR</button>
+    <div class="fab-container"><button id="btn-finalizar" class="btn-agendar">AGENDAR</button></div>
 
     <div class="modal" id="modal-cadastro">
         <div class="modal-content">
-            <h2 style="color:var(--cor-dourado-solido)">Confirmar</h2>
+            <h2 style="color:var(--cor-primaria)">Confirmar</h2>
             <input type="text" id="cliente-nome" placeholder="Seu Nome">
             <input type="tel" id="cliente-zap" placeholder="Seu WhatsApp">
             <button class="btn-confirmar" onclick="finalizarAgendamento()">CONFIRMAR AGENDAMENTO</button>
@@ -57,19 +45,14 @@
     <div class="modal" id="modal-historico">
         <div class="modal-content" style="text-align: left;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
-                <h3 style="color:var(--cor-dourado-solido)">Meus Agendamentos</h3>
+                <h3 style="color:var(--cor-primaria)">Meus Agendamentos</h3>
                 <button onclick="document.getElementById('modal-historico').style.display='none'" style="background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;">&times;</button>
             </div>
             <div id="lista-historico" style="max-height: 300px; overflow-y: auto;"><p style="color:#777; text-align:center">Carregando...</p></div>
         </div>
     </div>
 
-    <script>
-        function toggleMenu() {
-            document.getElementById('sidebar').classList.toggle('aberto');
-            document.getElementById('overlay').classList.toggle('aberto');
-        }
-    </script>
     <script type="module" src="js/client.js"></script>
+
 </body>
 </html>
