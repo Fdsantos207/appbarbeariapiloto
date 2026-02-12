@@ -159,22 +159,44 @@ input[type="date"] {
 }
 .btn-agendar.ativo { opacity: 1; transform: scale(1); }
 
-/* --- 10. MODAIS --- */
+/* --- 10. MODAIS (CORRIGIDO E BLINDADO) --- */
 .modal {
-    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.8); z-index: 300; align-items: center; justify-content: center;
+    display: none; 
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.9); /* Fundo mais escuro para focar */
+    
+    /* CORREÇÃO 1: Z-Index altíssimo para cobrir tudo */
+    z-index: 9999 !important; 
+    
+    align-items: center; justify-content: center;
     backdrop-filter: blur(5px);
 }
+
+/* CORREÇÃO 2: Essa é a classe que o JS procura e não achava */
+.modal.aberto {
+    display: flex;
+}
+
 .modal-content {
     background: #252525; padding: 30px; border-radius: 15px;
     width: 90%; max-width: 400px; text-align: center;
-    border: 1px solid #333; box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    border: 1px solid #333; box-shadow: 0 25px 50px rgba(0,0,0,0.8);
+    
+    /* Garante que o conteúdo fique acima do fundo borrado */
+    position: relative; 
+    z-index: 10000; 
 }
+
 .modal input {
     width: 100%; padding: 15px; margin: 10px 0;
     background: #1a1a1a; border: 1px solid #333;
     color: white; border-radius: 8px; font-size: 1rem;
+    
+    /* CORREÇÃO 3: Força o input a ser clicável */
+    position: relative; 
+    z-index: 10001; 
 }
+
 .modal input:focus { border-color: var(--cor-dourado-solido); }
 
 .btn-confirmar {
