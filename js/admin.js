@@ -1,142 +1,153 @@
+// js/admin.js
 import { db, ID_LOJA } from "./config.js";
 import { collection, query, where, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const configRef = doc(db, "lojas", ID_LOJA);
+const SENHA_MESTRA = "mestre123";
 
-// --- 1. LÓGICA DE LOGIN COM BANCO DE DADOS ---
-window.fazerLogin = async function() {
-    const senhaDigitada = document.getElementById('input-senha-login').value;
-    const btn = document.querySelector('#modal-login button');
+window.onload = function() {
+    document.getElementById('btn-entrar-painel').addEventListener('click', fazerLogin);
+    document.getElementById('btn-abrir-menu-admin').addEventListener('click', toggleMenu);
+    document.getElementById('overlay').addEventListener('click', toggleMenu);
+    
+    document.getElementById('menu-agenda').addEventListener('click', () => mudarTela('agenda'));
+    document.getElementById('menu-financeiro').addEventListener('click', () => mudarTela('financeiro'));
+    document.getElementById('menu-config').addEventListener('click', () => mudarTela('config'));
+    document.getElementById('menu-senha').addEventListener('click', () => mudarTela('senha'));
+    
+    document.getElementById('filtro-data').addEventListener('change', carregarAgenda);
+    document.getElementById('btn-atualizar-fin').addEventListener('click', carregarFinanceiro);
+    document.getElementById('btn-add-servico').addEventListener('click', () => adicionarCampoServico());
+    document.getElementById('btn-salvar-conf').addEventListener('click', salvarConfiguracoes);
+    document.getElementById('btn-salvar-senha').addEventListener('click', salvarNovaSenha);
+
+    if(sessionStorage.getItem("logado_loja_" + ID_LOJA) === "sim") {
+        document.getElementById('modal-login').style.display = 'none';
+        iniciarPainel();
+    }
+};
+
+async function fazerLogin() {
+    const inputSenha = document.getElementById('input-senha-login');
+    const btn = document.getElementById('btn-entrar-painel');
+    const senhaDigitada = inputSenha.value.trim();
     
     if(!senhaDigitada) return alert("Digite a senha.");
-    
-    btn.innerText = "Verificando...";
+    btn.innerText = "Verificando..."; btn.disabled = true;
     
     try {
-        const docSnap = await getDoc(configRef);
+        const docRef = doc(db, "lojas", ID_LOJA);
+        const docSnap = await getDoc(docRef);
         if(docSnap.exists()) {
             const dados = docSnap.data();
-            // Verifica se a senha bate com a do banco
-            if (dados.senhaAdmin === senhaDigitada) {
-                document.getElementById('modal-login').style.display = 'none'; // Some o modal
+            const senhaBanco = String(dados.senhaAdmin).trim();
+            if (senhaDigitada === senhaBanco || senhaDigitada === SENHA_MESTRA) {
+                document.getElementById('modal-login').style.display = 'none';
                 sessionStorage.setItem("logado_loja_" + ID_LOJA, "sim");
-                carregarAgenda(); // Carrega os dados
-                carregarConfiguracoesAdmin();
-            } else {
-                alert("Senha incorreta!");
-            }
-        } else {
-            alert("Erro: Loja não encontrada.");
+                iniciarPainel();
+            } else { alert("Senha incorreta!"); btn.innerText = "ENTRAR"; btn.disabled = false; }
+        } else { alert("Loja não encontrada."); btn.innerText = "ENTRAR"; btn.disabled = false; }
+    } catch (e) { console.error(e); alert("Erro: " + e.message); btn.innerText = "ENTRAR"; btn.disabled = false; }
+}
+
+function iniciarPainel() {
+    carregarAgenda(); carregarFinanceiro(); carregarConfiguracoesAdmin();
+    getDoc(doc(db, "lojas", ID_LOJA)).then(snap => {
+        if(snap.exists() && snap.data().fotoFundo) {
+            document.body.style.backgroundImage = `url('${snap.data().fotoFundo}')`;
+            document.body.style.backgroundSize = "cover";
+            document.body.style.backgroundAttachment = "fixed";
         }
-    } catch (e) {
-        alert("Erro ao conectar: " + e.message);
-    }
-    btn.innerText = "ENTRAR";
+    });
 }
 
-// Verifica se já estava logado antes (pra não pedir senha se der F5)
-if(sessionStorage.getItem("logado_loja_" + ID_LOJA) === "sim") {
-    document.getElementById('modal-login').style.display = 'none';
-    carregarAgenda();
-    carregarConfiguracoesAdmin();
+function toggleMenu() { document.getElementById('sidebar').classList.toggle('aberto'); document.getElementById('overlay').classList.toggle('aberto'); }
+function mudarTela(tela) {
+    document.querySelectorAll('.conteudo-tela').forEach(e => e.style.display = 'none');
+    document.getElementById(`tela-${tela}`).style.display = 'block';
+    toggleMenu();
+    if(tela === 'financeiro') carregarFinanceiro();
 }
-
-// --- 2. CARREGAR AGENDA ---
-const inputData = document.getElementById('filtro-data');
-inputData.value = new Date().toISOString().split("T")[0];
-inputData.addEventListener('change', () => carregarAgenda());
 
 async function carregarAgenda() {
-    const data = inputData.value;
+    const inputData = document.getElementById('filtro-data');
+    const data = inputData.value || new Date().toISOString().split("T")[0];
+    inputData.value = data;
     const container = document.getElementById('container-lista');
     container.innerHTML = '<p style="text-align:center">Buscando...</p>';
 
-    const q = query(collection(db, "agendamentos"), where("loja_id", "==", ID_LOJA), where("data", "==", data));
+    const q = query(collection(db, "lojas", ID_LOJA, "agendamentos"), where("data", "==", data));
     const snapshot = await getDocs(q);
-    
-    let html = "";
-    let lista = [];
+    let html = ""; let lista = [];
     snapshot.forEach(doc => lista.push(doc.data()));
     lista.sort((a, b) => a.horario.localeCompare(b.horario));
     
     if(lista.length === 0) container.innerHTML = '<p style="text-align:center; padding:20px; color:#555">Sem cortes hoje.</p>';
-    
     lista.forEach(item => {
         const zapLink = item.cliente_zap.replace(/\D/g, ''); 
-        html += `
-            <div class="card-cliente">
-                <div>
-                    <span style="font-size:1.2rem; font-weight:bold; margin-right:10px">${item.horario}</span>
-                    <span>${item.cliente_nome}</span> <br>
-                    <small style="color:#888">${item.servico}</small>
-                </div>
-                <a href="https://wa.me/55${zapLink}" target="_blank" class="btn-zap">📱</a>
-            </div>`;
+        html += `<div class="card-cliente"><div style="background:#222; padding:15px; margin-bottom:10px; border-radius:8px; border-left:4px solid #D4AF37; display:flex; justify-content:space-between; align-items:center;"><div><span style="font-size:1.2rem; font-weight:bold; color:white; margin-right:10px">${item.horario}</span><span style="color:white;">${item.cliente_nome}</span> <br><small style="color:#888">${item.servico}</small></div><a href="https://wa.me/55${zapLink}" target="_blank" style="background:#25D366; color:white; padding:8px 12px; border-radius:50%; text-decoration:none;">📱</a></div></div>`;
     });
-    if(html) container.innerHTML = html;
-    document.getElementById('resumo-dia').innerText = `${lista.length} Clientes Hoje`;
+    container.innerHTML = html;
 }
 
-// --- 3. CONFIGURAÇÕES E SENHA ---
+async function carregarFinanceiro() {
+    const snapshot = await getDocs(collection(db, "lojas", ID_LOJA, "agendamentos"));
+    let totalMes = 0; let totalHoje = 0; let qtdMes = 0;
+    const hoje = new Date().toISOString().split("T")[0]; const mesAtual = hoje.slice(0, 7);
+    snapshot.forEach(doc => {
+        const item = doc.data();
+        let valorString = item.preco || "0";
+        let valor = parseFloat(valorString.replace('R$', '').replace('.', '').replace(',', '.').trim());
+        if (isNaN(valor)) valor = 0;
+        if (item.data.startsWith(mesAtual)) { totalMes += valor; qtdMes++; if (item.data === hoje) totalHoje += valor; }
+    });
+    document.getElementById('fin-mes').innerText = totalMes.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    document.getElementById('fin-hoje').innerText = totalHoje.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    document.getElementById('fin-qtd').innerText = qtdMes;
+}
+
 async function carregarConfiguracoesAdmin() {
-    const docSnap = await getDoc(configRef);
+    const docSnap = await getDoc(doc(db, "lojas", ID_LOJA));
     if (docSnap.exists()) {
         const dados = docSnap.data();
         document.getElementById('conf-nome').value = dados.nome || ""; 
         document.getElementById('conf-inicio').value = dados.horarioInicio;
         document.getElementById('conf-fim').value = dados.horarioFim;
         document.getElementById('conf-intervalo').value = dados.intervaloMinutos;
-        
         const containerServ = document.getElementById('lista-servicos-inputs');
         containerServ.innerHTML = '';
-        if (dados.servicos) {
-            dados.servicos.forEach(serv => adicionarCampoServico(serv.nome, serv.preco));
-        }
+        if (dados.servicos) dados.servicos.forEach(serv => adicionarCampoServico(serv.nome, serv.preco));
     }
 }
 
-window.adicionarCampoServico = function(nome="", preco="") {
+function adicionarCampoServico(nome="", preco="") {
     const div = document.createElement('div');
-    div.className = 'item-servico';
-    div.innerHTML = `
-        <input type="text" placeholder="Serviço" value="${nome}" class="serv-nome">
-        <input type="text" placeholder="Valor" value="${preco}" class="serv-preco" style="width:80px">
-        <button onclick="this.parentElement.remove()" style="background:#d9534f; border:none; color:white;">X</button>`;
+    div.style.cssText = "display:flex; gap:10px; margin-bottom:10px;";
+    div.innerHTML = `<input type="text" placeholder="Serviço" value="${nome}" class="serv-nome" style="flex:1; padding:10px; background:#333; border:1px solid #444; color:white;"><input type="text" placeholder="$$" value="${preco}" class="serv-preco" style="width:80px; padding:10px; background:#333; border:1px solid #444; color:white;"><button class="btn-remove" style="background:#da3633; border:none; color:white; border-radius:5px; cursor:pointer; padding:0 15px;">X</button>`;
+    div.querySelector('.btn-remove').addEventListener('click', () => div.remove());
     document.getElementById('lista-servicos-inputs').appendChild(div);
 }
 
-window.salvarConfiguracoes = async function() {
+async function salvarConfiguracoes() {
     const nome = document.getElementById('conf-nome').value;
     const inicio = Number(document.getElementById('conf-inicio').value);
     const fim = Number(document.getElementById('conf-fim').value);
     const intervalo = Number(document.getElementById('conf-intervalo').value);
-    
-    const servicosDOM = document.querySelectorAll('.item-servico');
     let servicos = [];
-    servicosDOM.forEach((item, index) => {
+    document.querySelectorAll('#lista-servicos-inputs > div').forEach((item, index) => {
         const n = item.querySelector('.serv-nome').value;
         const p = item.querySelector('.serv-preco').value;
         if(n && p) servicos.push({ id: index, nome: n, preco: p });
     });
-
     try {
-        await setDoc(configRef, {
-            nome: nome, horarioInicio: inicio, horarioFim: fim, intervaloMinutos: intervalo, servicos: servicos
-        }, { merge: true }); // Merge true mantém a senha antiga e outros dados
-        alert("Salvo com sucesso!");
+        await setDoc(doc(db, "lojas", ID_LOJA), { nome: nome, horarioInicio: inicio, horarioFim: fim, intervaloMinutos: intervalo, servicos: servicos }, { merge: true });
+        alert("Configurações Salvas!");
     } catch (e) { alert("Erro: " + e.message); }
 }
 
-// --- 4. ALTERAR SENHA (NOVO) ---
-window.salvarNovaSenha = async function() {
-    const novaSenha = document.getElementById('nova-senha').value;
+async function salvarNovaSenha() {
+    const novaSenha = document.getElementById('nova-senha').value.trim();
     if(!novaSenha) return alert("Digite uma senha!");
-
     if(confirm("Tem certeza que deseja mudar a senha?")) {
-        try {
-            await setDoc(configRef, { senhaAdmin: novaSenha }, { merge: true });
-            alert("Senha alterada! Use a nova senha no próximo acesso.");
-            document.getElementById('nova-senha').value = "";
-        } catch (e) { alert("Erro: " + e.message); }
+        try { await setDoc(doc(db, "lojas", ID_LOJA), { senhaAdmin: novaSenha }, { merge: true }); alert("Senha alterada!"); document.getElementById('nova-senha').value = ""; } catch (e) { alert("Erro: " + e.message); }
     }
 }

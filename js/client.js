@@ -1,225 +1,163 @@
 // js/client.js
+import { db, ID_LOJA, IMAGEM_PADRAO } from "./config.js";
+import { collection, getDocs, addDoc, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Importamos a configuração que criamos no outro arquivo
-import { db, ID_LOJA } from "./config.js";
-import { collection, addDoc, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+let servicoSelecionado = null;
+let horarioSelecionado = null;
+let LOJA_CONFIG = null;
 
-// Variáveis Globais
-let LOJA_CONFIG = {}; 
-let selecao = { servico: null, data: null, horario: null };
+const elData = document.getElementById('data-agendamento');
+const elModal = document.getElementById('modal-agendamento');
+const btnAgendar = document.getElementById('btn-abrir-modal');
 
-// --- FUNÇÃO 1: Notificações (Toast) ---
-window.mostrarToast = function(msg, tipo) {
-    const x = document.getElementById("toast-box");
-    x.innerText = msg;
-    x.className = "toast show " + (tipo || "");
-    setTimeout(() => x.className = "toast", 3000);
-}
+window.onload = async function() {
+    if (!ID_LOJA) return alert("Erro: Link sem ID da loja.");
 
-// --- FUNÇÃO 2: Inicialização do App ---
-async function iniciarApp() {
     try {
-        // Busca as configurações da loja no Firebase
         const docRef = doc(db, "lojas", ID_LOJA);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
             LOJA_CONFIG = docSnap.data();
-            renderizarApp();
+            if (LOJA_CONFIG.ativa === false) return document.body.innerHTML = "<h1 style='color:white;text-align:center;padding:50px'>Loja Bloqueada</h1>";
+
+            const img = LOJA_CONFIG.fotoFundo || IMAGEM_PADRAO;
+            document.documentElement.style.setProperty('--bg-loja', `url('${img}')`);
+            document.getElementById('nome-barbearia').innerText = LOJA_CONFIG.nome;
+
+            renderizarServicos();
+            elData.min = new Date().toISOString().split("T")[0];
+            elData.addEventListener('change', carregarHorarios);
+            document.getElementById('conteudo-principal').classList.add('ativo');
+
+            const clienteSalvo = localStorage.getItem('cliente_barbearia');
+            if(clienteSalvo) {
+                const c = JSON.parse(clienteSalvo);
+                document.getElementById('cliente-nome').value = c.nome;
+                document.getElementById('cliente-zap').value = c.zap;
+            }
         } else {
-            document.getElementById('nome-barbearia').innerText = "Loja não configurada";
-            alert("Bem-vindo! Para começar, acesse a Área do Parceiro e salve as configurações.");
+            alert("Barbearia não encontrada!");
         }
-    } catch (error) {
-        console.error(error);
-        alert("Erro ao conectar: " + error.message);
-    }
+    } catch (e) { console.error(e); alert("Erro de conexão: " + e.message); }
+    
+    configurarCliques();
+};
+
+function configuringCliques() {
+    btnAgendar.addEventListener('click', () => {
+        if (!servicoSelecionado || !horarioSelecionado || !elData.value) return mostrarToast("⚠️ Selecione tudo!");
+        elModal.classList.add('aberto');
+    });
+
+    document.getElementById('btn-salvar-agendamento').addEventListener('click', salvarNoFirebase);
+    document.getElementById('btn-cancelar-modal').addEventListener('click', () => elModal.classList.remove('aberto'));
+    
+    document.getElementById('btn-abrir-menu').addEventListener('click', toggleMenu);
+    document.getElementById('btn-fechar-menu').addEventListener('click', toggleMenu);
+    document.getElementById('overlay-menu').addEventListener('click', toggleMenu);
+    document.getElementById('link-meus-agendamentos').addEventListener('click', () => { toggleMenu(); verMeusAgendamentos(); });
 }
 
-// Renderiza os serviços na tela
-function renderizarApp() {
-    const titulo = document.getElementById('nome-barbearia');
-    if(titulo) titulo.innerText = LOJA_CONFIG.nome || "Barbearia Online"; 
-    
-    // Mostra o container principal (estava oculto)
-    const containerPrincipal = document.getElementById('conteudo-principal');
-    containerPrincipal.classList.add('ativo');
-
-    const container = document.getElementById('lista-servicos');
-    container.innerHTML = '';
-    
-    // Cria os cards de serviço
-    if(LOJA_CONFIG.servicos && LOJA_CONFIG.servicos.length > 0) {
-        LOJA_CONFIG.servicos.forEach(serv => {
-            const div = document.createElement('div');
-            div.className = 'servico-card';
-            div.innerHTML = `
-                <div><h3>${serv.nome}</h3><p style="color:var(--cor-primaria)">${serv.preco}</p></div>
-                <div>➡️</div>`;
-            
-            // Evento de clique no serviço
-            div.onclick = () => {
-                document.querySelectorAll('.servico-card').forEach(e => e.classList.remove('selecionado'));
-                div.classList.add('selecionado');
-                selecao.servico = serv;
-                atualizarBotao();
-            };
-            container.appendChild(div);
+function renderizarServicos() {
+    const div = document.getElementById('lista-servicos');
+    div.innerHTML = '';
+    if(!LOJA_CONFIG.servicos) return;
+    LOJA_CONFIG.servicos.forEach(serv => {
+        const el = document.createElement('div');
+        el.className = 'servico-card';
+        el.innerHTML = `<div><h3>${serv.nome}</h3><p>${serv.preco}</p></div><div>✂️</div>`;
+        el.addEventListener('click', () => {
+            document.querySelectorAll('.servico-card').forEach(e => e.classList.remove('selecionado'));
+            el.classList.add('selecionado');
+            servicoSelecionado = serv;
+            atualizarBotao();
         });
-    } else {
-        container.innerHTML = '<p style="text-align:center; color:orange">Nenhum serviço cadastrado.</p>';
-    }
+        div.appendChild(el);
+    });
 }
 
-// --- FUNÇÃO 3: Gerenciamento de Data e Horário ---
-const inputData = document.getElementById('data-agendamento');
-inputData.min = new Date().toISOString().split("T")[0]; // Impede datas passadas
+async function carregarHorarios() {
+    const data = elData.value;
+    const div = document.getElementById('grade-horarios');
+    if(!data) return;
+    div.innerHTML = '<p style="grid-column:span 4; text-align:center; color:#888">Buscando...</p>';
+    horarioSelecionado = null; atualizarBotao();
 
-inputData.addEventListener('change', async (e) => {
-    selecao.data = e.target.value;
-    const container = document.getElementById('lista-horarios');
-    container.innerHTML = '<p style="grid-column: span 4; text-align: center;">Verificando agenda...</p>';
-    
-    // Busca horários já ocupados no banco
-    const q = query(collection(db, "agendamentos"), where("loja_id", "==", ID_LOJA), where("data", "==", selecao.data));
-    const snapshot = await getDocs(q);
-    const ocupados = [];
-    snapshot.forEach(doc => ocupados.push(doc.data().horario));
+    let horarios = [];
+    let atual = LOJA_CONFIG.horarioInicio * 60;
+    const fim = LOJA_CONFIG.horarioFim * 60;
+    while(atual < fim) {
+        const h = Math.floor(atual / 60).toString().padStart(2, '0');
+        const m = (atual % 60).toString().padStart(2, '0');
+        horarios.push(`${h}:${m}`);
+        atual += LOJA_CONFIG.intervaloMinutos;
+    }
 
-    gerarGradeHorarios(ocupados);
-    atualizarBotao();
-});
+    const q = query(collection(db, "lojas", ID_LOJA, "agendamentos"), where("data", "==", data));
+    const snap = await getDocs(q);
+    const ocupados = snap.docs.map(d => d.data().horario);
 
-function gerarGradeHorarios(ocupados) {
-    const container = document.getElementById('lista-horarios');
-    container.innerHTML = '';
-    
-    let hora = LOJA_CONFIG.horarioInicio || 9;
-    let min = 0;
-    const fim = LOJA_CONFIG.horarioFim || 19;
-    const intervalo = LOJA_CONFIG.intervaloMinutos || 45;
-
-    // Loop para criar os botões de horário
-    while (hora < fim) {
-        const horarioStr = `${hora.toString().padStart(2,'0')}:${min.toString().padStart(2,'0')}`;
-        const btn = document.createElement('button');
+    div.innerHTML = '';
+    horarios.forEach(hora => {
+        const btn = document.createElement('div');
         btn.className = 'horario-btn';
-        btn.innerText = horarioStr;
-
-        if (ocupados.includes(horarioStr)) {
-            btn.classList.add('ocupado');
-            btn.onclick = () => mostrarToast(`Horário ${horarioStr} indisponível`, "erro");
-        } else {
-            btn.onclick = () => {
-                document.querySelectorAll('.horario-btn').forEach(e => e.classList.remove('selecionado'));
+        btn.innerText = hora;
+        if(ocupados.includes(hora)) btn.classList.add('ocupado');
+        else {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.horario-btn').forEach(b => b.classList.remove('selecionado'));
                 btn.classList.add('selecionado');
-                selecao.horario = horarioStr;
+                horarioSelecionado = hora;
                 atualizarBotao();
-            };
+            });
         }
-        container.appendChild(btn);
-        
-        // Incrementa o tempo
-        min += intervalo;
-        if(min >= 60) { hora++; min -= 60; }
-    }
+        div.appendChild(btn);
+    });
 }
 
-// --- FUNÇÃO 4: Finalização ---
 function atualizarBotao() {
-    const btn = document.getElementById('btn-finalizar');
-    if(selecao.servico && selecao.data && selecao.horario) {
-        btn.classList.add('ativo');
-        btn.innerText = `AGENDAR (${selecao.horario})`;
+    if(servicoSelecionado && horarioSelecionado && elData.value) {
+        btnAgendar.classList.add('ativo'); btnAgendar.style.opacity = '1';
     } else {
-        btn.classList.remove('ativo');
-        btn.innerText = "AGENDAR";
+        btnAgendar.classList.remove('ativo'); btnAgendar.style.opacity = '0.4';
     }
 }
 
-// Evento do botão principal
-document.getElementById('btn-finalizar').addEventListener('click', () => {
-    if(document.getElementById('btn-finalizar').classList.contains('ativo')) {
-        document.getElementById('modal-cadastro').style.display = 'flex';
-    }
-});
-
-// Carrega dados salvos (memória) ao abrir
-window.addEventListener('load', () => {
-    if(localStorage.getItem('user_nome')) document.getElementById('cliente-nome').value = localStorage.getItem('user_nome');
-    if(localStorage.getItem('user_zap')) document.getElementById('cliente-zap').value = localStorage.getItem('user_zap');
-    iniciarApp(); // Inicia tudo
-});
-
-// Envia para o Firebase
-window.finalizarAgendamento = async function() {
+async function salvarNoFirebase() {
     const nome = document.getElementById('cliente-nome').value;
     const zap = document.getElementById('cliente-zap').value;
-    
-    if(!nome || !zap) return mostrarToast("Preencha todos os campos!", "erro");
+    const btn = document.getElementById('btn-salvar-agendamento');
+    if(!nome || !zap) return alert("Preencha Nome e WhatsApp");
 
-    // Salva na memória do celular
-    localStorage.setItem('user_nome', nome);
-    localStorage.setItem('user_zap', zap);
-
-    document.querySelector('.btn-confirmar').innerText = "Agendando...";
-
+    btn.innerText = "AGENDANDO..."; btn.disabled = true;
     try {
-        await addDoc(collection(db, "agendamentos"), {
-            loja_id: ID_LOJA,
-            data: selecao.data,
-            horario: selecao.horario,
-            servico: selecao.servico.nome,
-            cliente_nome: nome,
-            cliente_zap: zap,
-            criado_em: new Date()
+        await addDoc(collection(db, "lojas", ID_LOJA, "agendamentos"), {
+            data: elData.value, horario: horarioSelecionado, servico: servicoSelecionado.nome, preco: servicoSelecionado.preco,
+            cliente_nome: nome, cliente_zap: zap, criadoEm: new Date()
         });
-        mostrarToast("Agendado com Sucesso!", "sucesso");
+        localStorage.setItem('cliente_barbearia', JSON.stringify({ nome, zap }));
+        elModal.classList.remove('aberto');
+        mostrarToast("Agendamento realizado! ✅");
         setTimeout(() => location.reload(), 2000);
-    } catch (e) {
-        console.error(e);
-        mostrarToast("Erro ao agendar.", "erro");
-        document.querySelector('.btn-confirmar').innerText = "TENTAR NOVAMENTE";
-    }
+    } catch(e) { console.error(e); alert("Erro: " + e.message); btn.innerText = "TENTAR NOVAMENTE"; btn.disabled = false; }
 }
 
-// --- FUNÇÃO 5: Meus Agendamentos ---
-window.verMeusAgendamentos = async function() {
-    const zapSalvo = localStorage.getItem('user_zap');
-    if (!zapSalvo) return mostrarToast("Você ainda não fez agendamentos.", "erro");
-
-    document.getElementById('modal-historico').style.display = 'flex';
-    const listaDiv = document.getElementById('lista-historico');
-    listaDiv.innerHTML = '<p style="text-align:center; color:#888; margin-top:20px">Buscando sua ficha...</p>';
-
-    try {
-        const q = query(collection(db, "agendamentos"), where("loja_id", "==", ID_LOJA), where("cliente_zap", "==", zapSalvo));
-        const snapshot = await getDocs(q);
-        
-        if (snapshot.empty) {
-            listaDiv.innerHTML = '<p style="text-align:center; margin-top:20px">Nenhum agendamento encontrado.</p>';
-            return;
-        }
-
-        let html = "";
-        const lista = [];
-        snapshot.forEach(doc => lista.push(doc.data()));
-        lista.sort((a,b) => (a.data + a.horario).localeCompare(b.data + b.horario));
-
-        lista.forEach(item => {
-            const dataFormatada = item.data.split('-').reverse().slice(0,2).join('/');
-            html += `
-                <div style="background:#222; padding:12px; margin-bottom:10px; border-radius:8px; border-left: 3px solid var(--cor-primaria);">
-                    <div style="display:flex; justify-content:space-between;">
-                        <span style="font-weight:bold; color:#fff">${dataFormatada} às ${item.horario}</span>
-                        <span style="color:var(--cor-primaria); font-size:0.8rem">Agendado</span>
-                    </div>
-                    <div style="color:#aaa; font-size:0.9rem; margin-top:5px;">${item.servico}</div>
-                </div>`;
-        });
-        listaDiv.innerHTML = html;
-    } catch (e) {
-        console.error(e);
-        listaDiv.innerHTML = `<p style="color:red; text-align:center">Erro ao buscar.</p>`;
-    }
+function toggleMenu() {
+    document.getElementById('sidebar').classList.toggle('aberto');
+    document.getElementById('overlay-menu').classList.toggle('aberto');
 }
+function mostrarToast(msg) {
+    const t = document.getElementById('toast'); t.innerText = msg; t.className = "toast show";
+    setTimeout(() => t.className = "toast", 3000);
+}
+async function verMeusAgendamentos() {
+    const zap = prompt("Seu WhatsApp:"); if(!zap) return;
+    const q = query(collection(db, "lojas", ID_LOJA, "agendamentos"), where("cliente_zap", "==", zap));
+    const snap = await getDocs(q);
+    if(snap.empty) return alert("Nenhum agendamento.");
+    let msg = "Seus horários:\n"; snap.forEach(d => { const a = d.data(); msg += `${a.data} - ${a.horario}\n` }); alert(msg);
+}
+
+// Pequena correção: nome da função estava errado
+function configurarCliques() { configuringCliques(); } // Redireciona para a função correta

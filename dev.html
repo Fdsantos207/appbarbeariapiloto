@@ -3,37 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel do Desenvolvedor</title>
+    <title>Painel Master (Dev)</title>
     <style>
-        :root { --cor-fundo: #0d1117; --cor-card: #161b22; --azul: #58a6ff; }
-        * { box-sizing: border-box; font-family: sans-serif; }
-        body { background: var(--cor-fundo); color: #c9d1d9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { background: var(--cor-card); padding: 40px; border-radius: 10px; width: 100%; max-width: 500px; }
-        input { width: 100%; padding: 12px; margin-top: 5px; background: #0d1117; border: 1px solid #30363d; color: white; border-radius: 6px; }
-        button { width: 100%; padding: 15px; margin-top: 25px; background: #238636; color: white; border: none; cursor: pointer; font-weight: bold; border-radius: 6px;}
-        .resultado { margin-top: 30px; padding: 15px; background: rgba(88, 166, 255, 0.1); border: 1px solid var(--azul); display: none; border-radius: 6px;}
-        .link-box { background: #0d1117; padding: 10px; margin-top: 5px; color: var(--azul); word-break: break-all; cursor: pointer; border-radius: 4px;}
+        :root { --cor-fundo: #0d1117; --cor-card: #161b22; --azul: #58a6ff; --verde: #238636; }
+        body { background: var(--cor-fundo); color: #c9d1d9; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .container { background: var(--cor-card); padding: 30px; border-radius: 10px; width: 100%; max-width: 600px; margin-bottom: 20px; border: 1px solid #30363d; display: none; }
+        .upload-box { border: 2px dashed #30363d; padding: 20px; text-align: center; margin-top: 5px; cursor: pointer; }
+        .upload-box:hover { border-color: var(--azul); }
+        .preview-img { max-width: 100%; margin-top: 10px; display: none; }
+        input, select { width: 100%; padding: 12px; margin-top: 5px; background: #0d1117; border: 1px solid #30363d; color: white; border-radius: 6px; }
+        button { width: 100%; padding: 15px; margin-top: 25px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; background: var(--azul); color: white; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { background: none; border: none; color: #8b949e; padding: 10px; cursor: pointer; }
+        .tab-btn.ativo { color: white; border-bottom: 2px solid var(--azul); }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1 style="text-align:center; color:var(--azul)">🏭 Fábrica de Lojas</h1>
-        <label>Nome da Barbearia</label> <input type="text" id="nome-loja">
-        <label style="display:block; margin-top:15px">ID (Slug)</label> <input type="text" id="id-loja">
-        <button onclick="criarNovaLoja()">CRIAR LOJA</button>
+    <div class="tabs">
+        <button id="tab-lista" class="tab-btn ativo" onclick="mudarAba('lista')">📋 Lista</button>
+        <button id="tab-criar" class="tab-btn" onclick="mudarAba('criar')">➕ Criar</button>
+        <button id="tab-editar" class="tab-btn" onclick="mudarAba('editar')">✏️ Editar</button>
+    </div>
 
-        <div id="resultado" class="resultado">
-            <h3 style="margin:0; color:#238636">Sucesso!</h3>
-            <p>Envie este link para o Median (Website URL):</p>
-            <div class="link-box" onclick="copiar(this)" id="link-app">...</div>
+    <div id="aba-lista" class="container" style="display:block;">
+        <button onclick="carregarTodasLojas()" style="background:#21262d; margin-top:0;">🔄 Atualizar</button>
+        <div id="lista-lojas-container" style="margin-top:20px;"></div>
+    </div>
+
+    <div id="aba-criar" class="container">
+        <label>Nome</label> <input type="text" id="nome-loja">
+        <label>ID</label> <input type="text" id="id-loja">
+        <label>Foto</label>
+        <div class="upload-box" onclick="document.getElementById('file-criar').click()">📷 Escolher Foto</div>
+        <input type="file" id="file-criar" accept="image/*" style="display:none" onchange="processarImagem(this, 'preview-criar', 'base64-criar')">
+        <img id="preview-criar" class="preview-img">
+        <input type="hidden" id="base64-criar">
+        <button onclick="criarNovaLoja()">CRIAR</button>
+        <div id="res-criar" style="display:none; margin-top:20px; color:var(--verde);">Loja Criada!</div>
+    </div>
+
+    <div id="aba-editar" class="container">
+        <label>ID da Loja</label> <input type="text" id="edit-id">
+        <button onclick="buscarLoja()" style="background:#333; margin-top:10px;">🔍 Buscar</button>
+        <div id="form-editar" style="display:none; margin-top:20px;">
+            <label>Nome</label> <input type="text" id="edit-nome">
+            <label>Senha</label> <input type="text" id="edit-senha">
+            <label>Foto</label>
+            <div class="upload-box" onclick="document.getElementById('file-edit').click()">📷 Trocar Foto</div>
+            <input type="file" id="file-edit" accept="image/*" style="display:none" onchange="processarImagem(this, 'preview-edit', 'base64-edit')">
+            <img id="preview-edit" class="preview-img">
+            <input type="hidden" id="base64-edit">
+            <label>Status</label> <select id="edit-status"><option value="true">ATIVA</option><option value="false">BLOQUEADA</option></select>
+            <button onclick="salvarEdicao()">SALVAR</button>
         </div>
     </div>
 
     <script type="module">
-        import { db } from "./js/config.js"; // Usa sua config central
-        import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { db } from "./js/config.js";
+        import { doc, setDoc, getDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // Formata ID automático
+        if(sessionStorage.getItem('dev_logado') !== 'sim') {
+            if(prompt("Senha:") === "mestre123") sessionStorage.setItem('dev_logado', 'sim');
+            else { document.body.innerHTML = "<h1>Bloqueado</h1>"; throw new Error("Stop"); }
+        }
+
+        window.mudarAba = function(aba) {
+            document.querySelectorAll('.container').forEach(e => e.style.display = 'none');
+            document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('ativo'));
+            document.getElementById(`aba-${aba}`).style.display = 'block';
+            document.getElementById(`tab-${aba}`).classList.add('ativo');
+            if(aba === 'lista') carregarTodasLojas();
+        }
+
+        window.carregarTodasLojas = async function() {
+            const container = document.getElementById('lista-lojas-container');
+            container.innerHTML = 'Buscando...';
+            try {
+                const snapshot = await getDocs(collection(db, "lojas"));
+                let html = "";
+                snapshot.forEach(doc => {
+                    html += `<div style="background:#0d1117; padding:10px; margin-bottom:10px; border:1px solid #30363d; border-radius:5px;"><h3>${doc.data().nome}</h3><p>ID: ${doc.id}</p><button onclick="editarDireto('${doc.id}')" style="margin-top:5px; padding:5px;">Editar</button><a href="index.html?loja=${doc.id}" target="_blank" style="display:inline-block; margin-left:10px; color:#58a6ff;">Abrir</a></div>`;
+                });
+                container.innerHTML = html;
+            } catch(e) { container.innerHTML = "Erro: " + e.message; }
+        }
+        carregarTodasLojas();
+
+        window.processarImagem = function(input, idPreview, idHidden) {
+            const file = input.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        const maxWidth = 800;
+                        const scaleSize = maxWidth / img.width;
+                        canvas.width = maxWidth; canvas.height = img.height * scaleSize;
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+                        document.getElementById(idPreview).src = dataUrl;
+                        document.getElementById(idPreview).style.display = 'block';
+                        document.getElementById(idHidden).value = dataUrl;
+                    }
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
         document.getElementById('nome-loja').addEventListener('input', (e) => {
             document.getElementById('id-loja').value = e.target.value.toLowerCase().replace(/ /g, '_').replace(/[^\w-]+/g, '');
         });
@@ -41,29 +120,51 @@
         window.criarNovaLoja = async function() {
             const nome = document.getElementById('nome-loja').value;
             const id = document.getElementById('id-loja').value;
+            const foto = document.getElementById('base64-criar').value;
             if(!nome || !id) return alert("Preencha tudo!");
-
             try {
-                const docRef = doc(db, "lojas", id);
-                const docSnap = await getDoc(docRef);
-                if(docSnap.exists()) return alert("ID já existe!");
-
-                // CRIA A LOJA COM SENHA PADRÃO 'admin123'
-                await setDoc(docRef, {
-                    nome: nome,
-                    senhaAdmin: "admin123", // <--- IMPORTANTE: Senha inicial
-                    horarioInicio: 9, horarioFim: 19, intervaloMinutos: 45,
-                    servicos: [{ id: 0, nome: "Corte", preco: "R$ 35,00" }]
-                });
-
-                // Gera apenas o link do APP (Cliente)
-                const baseUrl = window.location.origin; // Pega o link do Vercel atual
-                document.getElementById('link-app').innerText = `${baseUrl}/index.html?loja=${id}`;
-                document.getElementById('resultado').style.display = 'block';
-            } catch (e) { alert("Erro: " + e.message); }
+                await setDoc(doc(db, "lojas", id), { nome, senhaAdmin: "admin123", fotoFundo: foto, ativa: true, horarioInicio: 9, horarioFim: 19, intervaloMinutos: 45, servicos: [{id:0, nome:"Corte", preco:"R$ 35,00"}] });
+                document.getElementById('res-criar').style.display = 'block';
+                carregarTodasLojas();
+            } catch(e) { alert("Erro: " + e.message); }
         }
 
-        window.copiar = (el) => { navigator.clipboard.writeText(el.innerText); alert("Copiado!"); }
+        window.editarDireto = function(id) {
+            mudarAba('editar');
+            document.getElementById('edit-id').value = id;
+            buscarLoja();
+        }
+
+        window.buscarLoja = async function() {
+            const id = document.getElementById('edit-id').value;
+            if(!id) return alert("ID?");
+            try {
+                const snap = await getDoc(doc(db, "lojas", id));
+                if(!snap.exists()) return alert("Não achei");
+                const d = snap.data();
+                document.getElementById('edit-nome').value = d.nome;
+                document.getElementById('edit-senha').value = d.senhaAdmin || "";
+                document.getElementById('edit-status').value = d.ativa === false ? "false" : "true";
+                if(d.fotoFundo) {
+                    document.getElementById('preview-edit').src = d.fotoFundo;
+                    document.getElementById('preview-edit').style.display = 'block';
+                    document.getElementById('base64-edit').value = d.fotoFundo;
+                }
+                document.getElementById('form-editar').style.display = 'block';
+            } catch(e) { alert("Erro: " + e.message); }
+        }
+
+        window.salvarEdicao = async function() {
+            const id = document.getElementById('edit-id').value;
+            const nome = document.getElementById('edit-nome').value;
+            const senha = document.getElementById('edit-senha').value;
+            const status = document.getElementById('edit-status').value === "true";
+            const foto = document.getElementById('base64-edit').value;
+            try {
+                await updateDoc(doc(db, "lojas", id), { nome, senhaAdmin: senha, ativa: status, fotoFundo: foto });
+                alert("Salvo!"); mudarAba('lista');
+            } catch(e) { alert("Erro: " + e.message); }
+        }
     </script>
 </body>
 </html>

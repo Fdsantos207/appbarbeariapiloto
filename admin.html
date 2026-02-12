@@ -6,46 +6,47 @@
     <title>Painel Parceiro</title>
     <link rel="stylesheet" href="css/style-admin.css">
     <style>
-        /* CSS Rápido para o Menu Admin */
         .sidebar { position: fixed; left: -250px; top: 0; width: 250px; height: 100%; background: #1a1a1a; transition: 0.3s; z-index: 200; padding: 20px; border-right: 1px solid #333; }
         .sidebar.aberto { left: 0; }
         .menu-item { display: block; padding: 15px; color: #ccc; text-decoration: none; cursor: pointer; border-radius: 5px; margin-bottom: 5px; }
         .menu-item:hover, .menu-item.ativo { background: #333; color: #D4AF37; }
-        .menu-item.voltar { color: #d9534f; margin-top: 20px; border: 1px solid #d9534f; text-align: center; }
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 150; display: none; }
         .overlay.aberto { display: block; }
-        
-        /* Modal de Login */
         #modal-login { position: fixed; top:0; left:0; width:100%; height:100%; background:#121212; z-index: 999; display: flex; align-items:center; justify-content:center; }
         .login-box { background: #1e1e1e; padding: 30px; border-radius: 10px; width: 90%; max-width: 350px; text-align: center; border: 1px solid #333; }
+        .grid-financeiro { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .card-fin { background: #222; padding: 20px; border-radius: 10px; text-align: center; }
+        .card-fin.destaque { grid-column: span 2; background: linear-gradient(135deg, #D4AF37 0%, #a3842c 100%); }
+        .card-fin.destaque h3, .card-fin.destaque .valor { color: #000; }
+        .valor { font-size: 1.5rem; font-weight: bold; color: #D4AF37; }
     </style>
 </head>
 <body>
-
     <div id="modal-login">
         <div class="login-box">
             <h2 style="color:#D4AF37; margin-bottom:20px;">Área Restrita</h2>
-            <p style="color:#888; margin-bottom:15px;">Digite sua senha de parceiro</p>
-            <input type="password" id="input-senha-login" placeholder="Senha" style="width:100%; padding:10px; margin-bottom:15px; background:#333; border:1px solid #444; color:white;">
-            <button onclick="fazerLogin()" style="width:100%; padding:12px; background:#D4AF37; border:none; font-weight:bold; cursor:pointer;">ENTRAR</button>
-            <a href="index.html" style="display:block; margin-top:15px; color:#666; font-size:0.8rem; text-decoration:none;">← Voltar ao App</a>
+            <p style="color:#888; margin-bottom:15px;">Digite sua senha</p>
+            <input type="password" id="input-senha-login" placeholder="Senha">
+            <button id="btn-entrar-painel" style="width:100%; padding:12px; background:#D4AF37; border:none; font-weight:bold; cursor:pointer;">ENTRAR</button>
+            <a href="index.html" style="display:block; margin-top:15px; color:#666; font-size:0.8rem;">← Voltar ao App</a>
         </div>
     </div>
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <button onclick="toggleMenu()" style="background:none; border:none; color:#D4AF37; font-size:1.8rem; cursor:pointer;">☰</button>
+        <button id="btn-abrir-menu-admin" style="background:none; border:none; color:#D4AF37; font-size:1.8rem; cursor:pointer;">☰</button>
         <h2 style="color:#D4AF37; font-size:1.2rem;">Painel Gerencial</h2>
-        <div></div> </div>
+        <div></div>
+    </div>
 
     <div id="sidebar" class="sidebar">
         <h3 style="color:#D4AF37; margin-bottom:30px;">Menu</h3>
-        <div class="menu-item ativo" onclick="mudarTela('agenda')">📅 Agenda</div>
-        <div class="menu-item" onclick="mudarTela('config')">⚙️ Configurações</div>
-        <div class="menu-item" onclick="mudarTela('senha')">🔒 Alterar Senha</div>
-        <div class="menu-item" onclick="alert('Financeiro em breve!')">💰 Financeiro <small>(Breve)</small></div>
-        <a href="index.html" class="menu-item voltar">⬅ Voltar ao App</a>
+        <div class="menu-item ativo" id="menu-agenda">📅 Agenda</div>
+        <div class="menu-item" id="menu-financeiro">💰 Financeiro</div> 
+        <div class="menu-item" id="menu-config">⚙️ Configurações</div>
+        <div class="menu-item" id="menu-senha">🔒 Alterar Senha</div>
+        <a href="index.html" class="menu-item" style="color:#d9534f; border:1px solid #d9534f; margin-top:20px; text-align:center;">⬅ Voltar ao App</a>
     </div>
-    <div id="overlay" class="overlay" onclick="toggleMenu()"></div>
+    <div id="overlay" class="overlay"></div>
 
     <div id="tela-agenda" class="conteudo-tela">
         <div class="painel-controle">
@@ -55,44 +56,39 @@
         <div id="container-lista"></div>
     </div>
 
-    <div id="tela-config" class="conteudo-tela" style="display:none;">
-        <div class="form-group">
-            <label>Nome da Barbearia</label>
-            <input type="text" id="conf-nome">
+    <div id="tela-financeiro" class="conteudo-tela" style="display:none;">
+        <h3 style="margin-bottom:15px; color:white;">Resumo Financeiro</h3>
+        <div class="grid-financeiro">
+            <div class="card-fin destaque"><h3>Faturamento Mês</h3><span class="valor" id="fin-mes">R$ 0,00</span></div>
+            <div class="card-fin"><h3>Hoje</h3><span class="valor" id="fin-hoje">R$ 0,00</span></div>
+            <div class="card-fin"><h3>Cortes (Mês)</h3><span class="valor" id="fin-qtd">0</span></div>
         </div>
+        <button id="btn-atualizar-fin" style="width:100%; padding:15px; background:#333; color:white; border-radius:8px; cursor:pointer;">🔄 Atualizar</button>
+    </div>
+
+    <div id="tela-config" class="conteudo-tela" style="display:none;">
+        <div class="form-group"><label>Nome</label> <input type="text" id="conf-nome"></div>
         <div class="form-group">
             <label>Horários</label>
-            <input type="number" id="conf-inicio" placeholder="Abre às">
-            <input type="number" id="conf-fim" placeholder="Fecha às">
-            <input type="number" id="conf-intervalo" placeholder="Tempo (min)">
+            <input type="number" id="conf-inicio" placeholder="Abre">
+            <input type="number" id="conf-fim" placeholder="Fecha">
+            <input type="number" id="conf-intervalo" placeholder="Minutos">
         </div>
         <div class="form-group">
             <label>Serviços</label>
-            <div id="lista-servicos-inputs" class="lista-servicos-edit"></div>
-            <button onclick="adicionarCampoServico()" style="margin-top:10px; width:100%; padding:10px; background:#333; color:white; border:none;">+ Serviço</button>
+            <div id="lista-servicos-inputs"></div>
+            <button id="btn-add-servico" style="margin-top:10px; width:100%; padding:10px; background:#333; color:white; border:none;">+ Serviço</button>
         </div>
-        <button class="btn-salvar" onclick="salvarConfiguracoes()">SALVAR TUDO</button>
+        <button id="btn-salvar-conf" class="btn-salvar">SALVAR TUDO</button>
     </div>
 
     <div id="tela-senha" class="conteudo-tela" style="display:none;">
         <div class="form-group">
             <h3 style="color:white; margin-bottom:15px;">Nova Senha</h3>
             <input type="text" id="nova-senha" placeholder="Digite a nova senha">
-            <button class="btn-salvar" onclick="salvarNovaSenha()">ATUALIZAR SENHA</button>
+            <button id="btn-salvar-senha" class="btn-salvar">ATUALIZAR SENHA</button>
         </div>
     </div>
-
-    <script>
-        function toggleMenu() {
-            document.getElementById('sidebar').classList.toggle('aberto');
-            document.getElementById('overlay').classList.toggle('aberto');
-        }
-        function mudarTela(tela) {
-            document.querySelectorAll('.conteudo-tela').forEach(e => e.style.display = 'none');
-            document.getElementById(`tela-${tela}`).style.display = 'block';
-            toggleMenu(); // Fecha o menu
-        }
-    </script>
     <script type="module" src="js/admin.js"></script>
 </body>
 </html>
