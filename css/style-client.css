@@ -1,18 +1,196 @@
-/* Sidebar Menu */
+/* css/style-client.css - VERSÃO FINAL COMPLETA */
+
+/* --- 1. VARIÁVEIS E CORES --- */
+:root {
+    /* Cores */
+    --cor-fundo: #121212;
+    --cor-fundo-card: #1E1E1E;
+    --cor-texto: #ffffff;
+    --cor-texto-secundario: #a0a0a0;
+    
+    /* Degradê Dourado Premium */
+    --gradiente-dourado: linear-gradient(135deg, #d4af37 0%, #c5a028 100%);
+    --cor-dourado-solido: #d4af37;
+    
+    /* Sombras */
+    --sombra-card: 0 10px 20px rgba(0,0,0,0.3);
+    --sombra-botao: 0 4px 15px rgba(212, 175, 55, 0.4);
+}
+
+/* --- 2. RESET E CORPO --- */
+* { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
+
+body {
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: 'Poppins', sans-serif;
+    padding-bottom: 100px; /* Espaço para o botão flutuante */
+    overflow-x: hidden; /* Evita rolagem lateral */
+}
+
+/* --- 3. CABEÇALHO (HEADER) --- */
+header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 15px 25px;
+    background: rgba(30, 30, 30, 0.85);
+    backdrop-filter: blur(10px); /* Vidro */
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    position: sticky; top: 0; z-index: 100;
+}
+
+header h1 {
+    font-size: 1.1rem; font-weight: 600; letter-spacing: 0.5px;
+    background: var(--gradiente-dourado);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent; /* Texto Dourado */
+}
+
+/* --- 4. MENU LATERAL (SIDEBAR) --- */
 .sidebar {
-    position: fixed; top: 0; right: -250px; width: 250px; height: 100%;
-    background: #1a1a1a; z-index: 200; transition: 0.3s;
-    box-shadow: -5px 0 15px rgba(0,0,0,0.5); padding: 20px;
+    position: fixed; top: 0; right: -280px; width: 280px; height: 100%;
+    background: #1a1a1a; z-index: 200; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: -5px 0 25px rgba(0,0,0,0.7); padding: 25px; border-left: 1px solid #333;
 }
 .sidebar.aberto { right: 0; }
-.sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+
+.sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+.sidebar-header h3 { color: var(--cor-dourado-solido); font-size: 1.2rem; }
+.sidebar-header button { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
+
 .sidebar nav a {
     display: block; padding: 15px 0; color: #ccc; text-decoration: none;
-    font-size: 1rem; transition: 0.2s;
+    font-size: 1rem; transition: 0.2s; border-bottom: 1px solid #2a2a2a;
 }
-.sidebar nav a:hover { color: var(--cor-dourado-solido); padding-left: 5px; }
+.sidebar nav a:hover { color: var(--cor-dourado-solido); padding-left: 10px; }
+
 .overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5); z-index: 150; display: none;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(2px);
+    z-index: 150; display: none; opacity: 0; transition: opacity 0.3s;
 }
-.overlay.aberto { display: block; }
+.overlay.aberto { display: block; opacity: 1; }
+
+/* --- 5. CONTEÚDO E ANIMAÇÕES --- */
+.container {
+    padding: 20px; max-width: 500px; margin: 0 auto;
+    opacity: 0; transform: translateY(20px); transition: 0.6s ease-out;
+}
+.container.ativo { opacity: 1; transform: translateY(0); }
+
+.section-title {
+    margin: 30px 0 15px;
+    font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--cor-texto-secundario); font-weight: 600;
+    display: flex; align-items: center; gap: 10px;
+}
+.section-title::before {
+    content: ''; display: block; width: 4px; height: 18px;
+    background: var(--gradiente-dourado); border-radius: 2px;
+}
+
+/* --- 6. CARDS DE SERVIÇO --- */
+.servico-card {
+    background: var(--cor-fundo-card);
+    padding: 20px; margin-bottom: 15px;
+    border-radius: 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    border: 1px solid rgba(255,255,255,0.03);
+    box-shadow: var(--sombra-card);
+    cursor: pointer; transition: all 0.3s;
+}
+.servico-card:hover { transform: translateY(-3px); border-color: rgba(212, 175, 55, 0.3); }
+
+.servico-card.selecionado {
+    background: linear-gradient(145deg, #2a2a2a, #222);
+    border: 1px solid var(--cor-dourado-solido);
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.15);
+}
+.servico-card h3 { font-size: 1rem; font-weight: 500; }
+.servico-card p { color: var(--cor-dourado-solido); font-weight: 600; }
+
+/* --- 7. INPUTS E DATAS --- */
+input[type="date"] {
+    width: 100%; padding: 18px;
+    background: var(--cor-fundo-card);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: white; border-radius: 12px;
+    font-family: 'Poppins', sans-serif; font-size: 1rem;
+    cursor: pointer;
+    color-scheme: dark; /* Força o calendário a ficar escuro no celular */
+}
+
+/* --- 8. GRADE DE HORÁRIOS --- */
+.grade-horarios { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+.horario-btn {
+    background: var(--cor-fundo-card);
+    border: 1px solid rgba(255,255,255,0.05);
+    color: #eee; padding: 12px 0;
+    border-radius: 10px; font-size: 0.9rem; font-family: 'Poppins', sans-serif;
+    cursor: pointer; transition: 0.2s;
+}
+.horario-btn.selecionado {
+    background: var(--gradiente-dourado); color: #000; font-weight: 600;
+    border: none; transform: scale(1.05); box-shadow: var(--sombra-botao);
+}
+.horario-btn.ocupado {
+    background: #151515; color: #444; text-decoration: line-through;
+    cursor: default; opacity: 0.5; border: 1px solid #222;
+}
+
+/* --- 9. BOTÃO AGENDAR (FLUTUANTE) --- */
+.fab-container {
+    position: fixed; bottom: 0; left: 0; width: 100%;
+    padding: 20px;
+    background: linear-gradient(to top, #121212 80%, transparent);
+    display: flex; justify-content: center; z-index: 90;
+    pointer-events: none;
+}
+.btn-agendar {
+    pointer-events: all;
+    background: var(--gradiente-dourado);
+    color: #121212; border: none;
+    padding: 18px 0; width: 100%; max-width: 500px;
+    border-radius: 50px;
+    font-size: 1rem; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; cursor: pointer;
+    box-shadow: var(--sombra-botao);
+    opacity: 0.3; transform: scale(0.95); transition: 0.4s;
+}
+.btn-agendar.ativo { opacity: 1; transform: scale(1); }
+
+/* --- 10. MODAIS --- */
+.modal {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8); z-index: 300; align-items: center; justify-content: center;
+    backdrop-filter: blur(5px);
+}
+.modal-content {
+    background: #252525; padding: 30px; border-radius: 15px;
+    width: 90%; max-width: 400px; text-align: center;
+    border: 1px solid #333; box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+}
+.modal input {
+    width: 100%; padding: 15px; margin: 10px 0;
+    background: #1a1a1a; border: 1px solid #333;
+    color: white; border-radius: 8px; font-size: 1rem;
+}
+.modal input:focus { border-color: var(--cor-dourado-solido); }
+
+.btn-confirmar {
+    background: var(--gradiente-dourado); color: #000; font-weight: bold;
+    padding: 15px; width: 100%; border: none; border-radius: 8px;
+    margin-top: 15px; cursor: pointer; text-transform: uppercase;
+}
+
+/* --- 11. TOASTS (NOTIFICAÇÕES) --- */
+.toast {
+    visibility: hidden; min-width: 250px; margin-left: -125px;
+    background: rgba(40, 40, 40, 0.95); backdrop-filter: blur(5px);
+    color: #fff; text-align: center; border-radius: 50px; border: 1px solid #444;
+    padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 100px;
+    transform: translateY(100px); transition: 0.3s;
+}
+.toast.show { visibility: visible; transform: translateY(0); }
+.toast.sucesso { border-color: var(--cor-dourado-solido); color: var(--cor-dourado-solido); }
+.toast.erro { border-color: #ff4444; color: #ff4444; }
