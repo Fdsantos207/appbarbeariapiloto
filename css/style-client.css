@@ -1,167 +1,67 @@
-/* css/style-client.css - VISUAL PREMIUM V2 */
-
+/* css/style-client.css */
 :root {
-    --cor-fundo: #0a0a0a; /* Fundo ligeiramente mais escuro */
-    --cor-fundo-card: rgba(30, 30, 30, 0.80); /* Mais transparência para o efeito glass */
-    --cor-texto: #ffffff;
-    --cor-texto-secundario: #b3b3b3;
-    /* Gradiente Dourado Metálico */
-    --gradiente-dourado: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
-    --cor-dourado-solido: #D4AF37;
-    --sombra-card: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-    --brilho-dourado: 0 0 15px rgba(212, 175, 55, 0.3);
+    --fundo: #0a0a0a;
+    --card: #1a1a1a;
+    --dourado: #D4AF37;
+    --gradiente: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728);
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
 
-body {
-    background-color: var(--cor-fundo);
-    color: var(--cor-texto);
-    font-family: 'Poppins', sans-serif;
-    padding-bottom: 130px;
-    min-height: 100vh;
-    overflow-x: hidden;
-    position: relative;
-}
+body { background: var(--fundo); color: white; padding-bottom: 120px; }
 
-/* Fundo com Imagem + Textura */
-body::before {
-    content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2;
-    background-image: var(--bg-loja); background-size: cover; background-position: center;
-    opacity: 0.2; filter: grayscale(100%) contrast(130%);
-}
-/* Overlay para garantir leitura */
-body::after {
-    content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
-    background: linear-gradient(to bottom, rgba(10,10,10,0.8), rgba(10,10,10,1));
-}
-
-/* CABEÇALHO GLASS */
+/* HEADER */
 header { 
-    display: flex; justify-content: space-between; align-items: center; 
-    padding: 20px; 
-    background: rgba(20, 20, 20, 0.8); /* Efeito vidro */
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    position: sticky; top: 0; z-index: 100; 
-    border-bottom: 1px solid rgba(212, 175, 55, 0.1);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+    display: flex; justify-content: space-between; padding: 20px; 
+    background: rgba(10,10,10,0.9); backdrop-filter: blur(10px);
+    position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #222;
 }
-/* Área do Logo (Texto ou Imagem) */
-.logo-area {
-    display: flex; align-items: center; gap: 10px;
-}
-header h1 { 
-    font-size: 1.3rem; font-weight: 700; letter-spacing: 0.5px;
-    background: var(--gradiente-dourado); -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
-    text-transform: uppercase;
-}
+header h1 { background: var(--gradiente); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.2rem; }
+#btn-abrir-menu { background: none; border: none; color: var(--dourado); font-size: 1.5rem; }
 
 /* CONTEÚDO */
-.container { 
-    padding: 20px; max-width: 600px; margin: 0 auto; 
-    opacity: 1; animation: fadeUp 0.6s ease-out;
-}
-@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.container { padding: 20px; max-width: 500px; margin: 0 auto; }
+.section-title { color: var(--dourado); font-size: 0.8rem; letter-spacing: 2px; margin: 30px 0 15px; font-weight: bold; }
 
-.section-title { 
-    margin: 35px 0 15px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1.5px; 
-    color: var(--cor-dourado-solido); font-weight: 700; 
-    display: flex; align-items: center; gap: 15px;
-}
-.section-title::after {content: ""; flex: 1; height: 1px; background: rgba(212, 175, 55, 0.2);}
-
-/* CARDS DE SERVIÇO (Com ícone SVG) */
 .servico-card { 
-    background: var(--cor-fundo-card); 
-    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-    padding: 20px; margin-bottom: 15px; border-radius: 16px; 
-    display: flex; justify-content: space-between; align-items: center; 
-    border: 1px solid rgba(255,255,255,0.05); 
-    cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    box-shadow: var(--sombra-card);
+    background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 10px;
+    display: flex; justify-content: space-between; border: 1px solid #222;
 }
-.servico-card:hover { transform: translateY(-3px); border-color: rgba(212, 175, 55, 0.4); }
-.servico-card.selecionado { 
-    background: linear-gradient(145deg, rgba(40,40,40,0.9), rgba(20,20,20,0.9));
-    border: 1px solid var(--cor-dourado-solido); 
-    box-shadow: var(--brilho-dourado);
-}
-.servico-card h3 { font-size: 1.1rem; margin-bottom: 5px; color: white; font-weight: 600; }
-.servico-card p { color: var(--cor-dourado-solido); font-weight: 700; font-size: 1rem; }
-/* Ícone SVG dentro do card */
-.servico-icon { width: 32px; height: 32px; fill: var(--cor-texto-secundario); transition: 0.3s; }
-.servico-card.selecionado .servico-icon { fill: var(--cor-dourado-solido); filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.5)); }
+.servico-card.selecionado { border-color: var(--dourado); box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); }
 
-/* INPUTS & HORÁRIOS */
 input[type="date"] { 
-    width: 100%; padding: 18px; background: rgba(255,255,255,0.05); 
-    border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 14px; 
-    font-size: 1.1rem; color-scheme: dark; transition: 0.3s;
-    font-family: 'Poppins', sans-serif;
-}
-input[type="date"]:focus { border-color: var(--cor-dourado-solido); box-shadow: var(--brilho-dourado); }
-
-.grade-horarios { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-.horario-btn { 
-    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); 
-    color: #eee; padding: 14px 0; border-radius: 12px; font-size: 0.95rem; 
-    text-align: center; cursor: pointer; transition: all 0.2s; font-weight: 500;
-}
-.horario-btn:hover { background: rgba(255,255,255,0.1); }
-.horario-btn.selecionado { 
-    background: var(--gradiente-dourado); color: #000; font-weight: 800; border: none; 
-    box-shadow: var(--brilho-dourado); transform: scale(1.05);
-}
-.horario-btn.ocupado { 
-    background: #0a0a0a; color: #333; text-decoration: line-through; 
-    cursor: not-allowed; border: 1px solid #222; opacity: 0.6;
+    width: 100%; padding: 15px; background: #111; border: 1px solid #333; 
+    color: white; border-radius: 10px; color-scheme: dark;
 }
 
-/* BOTÃO FLUTUANTE PREMIUM */
-.fab-container { 
-    position: fixed; bottom: 0; left: 0; width: 100%; padding: 25px; 
-    background: linear-gradient(to top, #0a0a0a 80%, transparent); 
-    display: flex; justify-content: center; z-index: 90; pointer-events: none;
-}
+.grade-horarios { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.horario-btn { background: #111; border: 1px solid #222; color: white; padding: 12px 0; border-radius: 8px; text-align: center; }
+.horario-btn.selecionado { background: var(--gradiente); color: black; font-weight: bold; border: none; }
+.horario-btn.ocupado { opacity: 0.2; text-decoration: line-through; }
+
+/* BOTÃO FIXO */
+.fab-container { position: fixed; bottom: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #0a0a0a); z-index: 90; }
 .btn-agendar { 
-    pointer-events: auto; width: 100%; max-width: 500px; padding: 20px; 
-    background: var(--gradiente-dourado); color: #000; border: none; 
-    border-radius: 50px; font-weight: 800; font-size: 1.1rem; letter-spacing: 1px; 
-    box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4); cursor: pointer; 
-    opacity: 0.5; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-    display: flex; align-items: center; justify-content: center; gap: 10px;
-    transform: translateY(20px);
+    width: 100%; padding: 18px; border-radius: 50px; border: none;
+    background: var(--gradiente); font-weight: bold; font-size: 1rem;
+    opacity: 0.3; transition: 0.3s;
 }
-.btn-agendar.ativo { opacity: 1; transform: translateY(0); }
-.btn-agendar:active { transform: scale(0.98); }
+.btn-agendar.ativo { opacity: 1; box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4); }
 
-/* SIDEBAR & MODAL (Estilo Glass) */
-.sidebar { 
-    position: fixed; top: 0; right: -300px; width: 300px; height: 100%; 
-    background: rgba(20,20,20,0.95); backdrop-filter: blur(20px); z-index: 200; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
-    padding: 30px; border-left: 1px solid rgba(212, 175, 55, 0.2);
-}
-.sidebar.aberto { right: 0; box-shadow: -10px 0 50px rgba(0,0,0,0.7); }
-.sidebar-header h3 { color: var(--cor-dourado-solido); text-transform: uppercase; letter-spacing: 1px; }
-.sidebar nav a { padding: 18px 0; border-color: rgba(255,255,255,0.05); font-size: 1.05rem; transition: 0.2s; }
-.sidebar nav a:hover { color: var(--cor-dourado-solido); padding-left: 10px; }
-
+/* MODAL CORRIGIDO (Oculto por padrão) */
 .modal { 
-    background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-    z-index: 9999 !important; 
+    display: none !important; /* ISSO RESOLVE SEU ERRO */
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+    background: rgba(0,0,0,0.95); z-index: 1000; align-items: center; justify-content: center; 
 }
-.modal-content { 
-    background: linear-gradient(145deg, #222, #1a1a1a); 
-    border: 1px solid var(--cor-dourado-solido);
-    box-shadow: var(--brilho-dourado);
-    padding: 35px; border-radius: 20px; max-width: 420px;
-}
-.modal input { background: rgba(0,0,0,0.3); border-color: #444; transition: 0.3s; }
-.modal input:focus { border-color: var(--cor-dourado-solido); box-shadow: var(--brilho-dourado); }
-.btn-confirmar { 
-    background: var(--gradiente-dourado); color: #000; font-weight: 900; 
-    padding: 18px; border-radius: 12px; font-size: 1.1rem; box-shadow: var(--brilho-dourado);
-}
+.modal.aberto { display: flex !important; }
+.modal-content { background: #111; padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; border: 1px solid var(--dourado); }
+.modal input { width: 100%; padding: 12px; margin: 10px 0; background: #000; border: 1px solid #333; color: white; }
+.btn-confirmar { width: 100%; padding: 15px; background: var(--gradiente); border: none; font-weight: bold; margin-top: 10px; }
+.btn-cancelar { background: none; border: none; color: #555; margin-top: 15px; width: 100%; cursor: pointer; }
 
-.toast { background: #1a1a1a; border: 1px solid var(--cor-dourado-solido); color: var(--cor-dourado-solido); font-weight: 600; box-shadow: var(--brilho-dourado); }
+/* SIDEBAR */
+.sidebar { position: fixed; top: 0; right: -280px; width: 280px; height: 100%; background: #111; z-index: 200; transition: 0.3s; padding: 20px; }
+.sidebar.aberto { right: 0; }
+.overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 150; display: none; }
+.overlay.aberto { display: block; }
