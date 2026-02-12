@@ -5,26 +5,48 @@ import { collection, query, where, getDocs, doc, getDoc, setDoc } from "https://
 const SENHA_MESTRA = "mestre123";
 
 window.onload = function() {
+    // 1. CARREGA A FOTO IMEDIATAMENTE (Essa é a correção)
+    carregarFundoLoja();
+
+    // 2. Configura botões
     document.getElementById('btn-entrar-painel').addEventListener('click', fazerLogin);
     document.getElementById('btn-abrir-menu-admin').addEventListener('click', toggleMenu);
     document.getElementById('overlay').addEventListener('click', toggleMenu);
     
-    document.getElementById('menu-agenda').addEventListener('click', () => mudarTela('agenda'));
-    document.getElementById('menu-financeiro').addEventListener('click', () => mudarTela('financeiro'));
-    document.getElementById('menu-config').addEventListener('click', () => mudarTela('config'));
-    document.getElementById('menu-senha').addEventListener('click', () => mudarTela('senha'));
+    // Navegação
+    const menus = ['agenda', 'financeiro', 'config', 'senha'];
+    menus.forEach(m => {
+        document.getElementById(`menu-${m}`).addEventListener('click', () => mudarTela(m));
+    });
     
+    // Ações
     document.getElementById('filtro-data').addEventListener('change', carregarAgenda);
     document.getElementById('btn-atualizar-fin').addEventListener('click', carregarFinanceiro);
     document.getElementById('btn-add-servico').addEventListener('click', () => adicionarCampoServico());
     document.getElementById('btn-salvar-conf').addEventListener('click', salvarConfiguracoes);
     document.getElementById('btn-salvar-senha').addEventListener('click', salvarNovaSenha);
 
+    // 3. Auto-login se já estiver logado
     if(sessionStorage.getItem("logado_loja_" + ID_LOJA) === "sim") {
         document.getElementById('modal-login').style.display = 'none';
         iniciarPainel();
     }
 };
+
+// --- NOVA FUNÇÃO: CARREGA O FUNDO ---
+async function carregarFundoLoja() {
+    if(!ID_LOJA) return;
+    try {
+        const docRef = doc(db, "lojas", ID_LOJA);
+        const snap = await getDoc(docRef);
+        if(snap.exists() && snap.data().fotoFundo) {
+            // Injeta a foto na variável do CSS
+            document.documentElement.style.setProperty('--bg-loja', `url('${snap.data().fotoFundo}')`);
+        }
+    } catch(e) {
+        console.log("Erro ao carregar fundo:", e);
+    }
+}
 
 async function fazerLogin() {
     const inputSenha = document.getElementById('input-senha-login');
@@ -49,27 +71,11 @@ async function fazerLogin() {
     } catch (e) { console.error(e); alert("Erro: " + e.message); btn.innerText = "ENTRAR"; btn.disabled = false; }
 }
 
-
 function iniciarPainel() {
     carregarAgenda(); 
     carregarFinanceiro(); 
     carregarConfiguracoesAdmin();
-    
-    // --- LÓGICA DA IMAGEM DE FUNDO ---
-    getDoc(doc(db, "lojas", ID_LOJA)).then(snap => {
-        if(snap.exists()) {
-            const dados = snap.data();
-            
-            // Verifica se tem foto salva
-            if(dados.fotoFundo) {
-                // Aplica a foto na variável CSS (igual ao app do cliente)
-                document.documentElement.style.setProperty('--bg-loja', `url('${dados.fotoFundo}')`);
-            } else {
-                // Se não tiver, pode colocar uma padrão ou deixar sem
-                // document.documentElement.style.setProperty('--bg-loja', `url('${IMAGEM_PADRAO}')`);
-            }
-        }
-    });
+    // O fundo já foi carregado no início, não precisa carregar de novo aqui
 }
 
 function toggleMenu() { document.getElementById('sidebar').classList.toggle('aberto'); document.getElementById('overlay').classList.toggle('aberto'); }
@@ -96,7 +102,7 @@ async function carregarAgenda() {
     if(lista.length === 0) container.innerHTML = '<p style="text-align:center; padding:20px; color:#555">Sem cortes hoje.</p>';
     lista.forEach(item => {
         const zapLink = item.cliente_zap.replace(/\D/g, ''); 
-        html += `<div class="card-cliente"><div style="background:#222; padding:15px; margin-bottom:10px; border-radius:8px; border-left:4px solid #D4AF37; display:flex; justify-content:space-between; align-items:center;"><div><span style="font-size:1.2rem; font-weight:bold; color:white; margin-right:10px">${item.horario}</span><span style="color:white;">${item.cliente_nome}</span> <br><small style="color:#888">${item.servico}</small></div><a href="https://wa.me/55${zapLink}" target="_blank" style="background:#25D366; color:white; padding:8px 12px; border-radius:50%; text-decoration:none;">📱</a></div></div>`;
+        html += `<div class="card-cliente"><div><span style="font-size:1.2rem; font-weight:bold; color:white; margin-right:10px">${item.horario}</span><span style="color:white;">${item.cliente_nome}</span> <br><small style="color:#888">${item.servico}</small></div><a href="https://wa.me/55${zapLink}" target="_blank" style="background:#25D366; color:white; padding:8px 12px; border-radius:50%; text-decoration:none;">📱</a></div>`;
     });
     container.innerHTML = html;
 }
@@ -133,8 +139,8 @@ async function carregarConfiguracoesAdmin() {
 
 function adicionarCampoServico(nome="", preco="") {
     const div = document.createElement('div');
-    div.style.cssText = "display:flex; gap:10px; margin-bottom:10px;";
-    div.innerHTML = `<input type="text" placeholder="Serviço" value="${nome}" class="serv-nome" style="flex:1; padding:10px; background:#333; border:1px solid #444; color:white;"><input type="text" placeholder="$$" value="${preco}" class="serv-preco" style="width:80px; padding:10px; background:#333; border:1px solid #444; color:white;"><button class="btn-remove" style="background:#da3633; border:none; color:white; border-radius:5px; cursor:pointer; padding:0 15px;">X</button>`;
+    div.className = 'item-servico';
+    div.innerHTML = `<input type="text" placeholder="Serviço" value="${nome}" class="serv-nome" style="flex:1"><input type="text" placeholder="$$" value="${preco}" class="serv-preco" style="width:80px"><button class="btn-remove">X</button>`;
     div.querySelector('.btn-remove').addEventListener('click', () => div.remove());
     document.getElementById('lista-servicos-inputs').appendChild(div);
 }
