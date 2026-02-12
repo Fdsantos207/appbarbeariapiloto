@@ -3,177 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Master (Dev)</title>
+    <title>Painel do Desenvolvedor</title>
     <style>
-        :root { --cor-fundo: #0d1117; --cor-card: #161b22; --azul: #58a6ff; --verde: #238636; --vermelho: #da3633; --roxo: #db61a2; }
+        :root { --cor-fundo: #0d1117; --cor-card: #161b22; --azul: #58a6ff; }
         * { box-sizing: border-box; font-family: sans-serif; }
-        body { background: var(--cor-fundo); color: #c9d1d9; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        
-        .container { background: var(--cor-card); padding: 30px; border-radius: 10px; width: 100%; max-width: 600px; margin-bottom: 20px; border: 1px solid #30363d; }
-        h2 { margin-top: 0; color: var(--azul); text-align: center; }
-        
-        label { display: block; margin-top: 15px; color: #8b949e; font-size: 0.9rem; }
-        input, select { width: 100%; padding: 12px; margin-top: 5px; background: #0d1117; border: 1px solid #30363d; color: white; border-radius: 6px; }
-        input:focus, select:focus { border-color: var(--azul); outline: none; }
-        
-        button { width: 100%; padding: 15px; margin-top: 25px; border: none; cursor: pointer; font-weight: bold; border-radius: 6px; transition: 0.2s; }
-        .btn-criar { background: var(--verde); color: white; }
-        .btn-atualizar { background: var(--azul); color: white; }
-        button:hover { opacity: 0.9; }
-
-        .resultado { margin-top: 20px; padding: 15px; background: rgba(35, 134, 54, 0.2); border: 1px solid var(--verde); display: none; border-radius: 6px; }
-        .link-box { background: #0d1117; padding: 10px; margin-top: 5px; color: var(--azul); word-break: break-all; cursor: pointer; border-radius: 4px; font-family: monospace; font-size: 0.85rem; }
-        
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #30363d; width: 100%; max-width: 600px; }
-        .tab-btn { background: none; border: none; color: #8b949e; padding: 10px; cursor: pointer; font-size: 1rem; flex: 1; }
-        .tab-btn.ativo { color: white; border-bottom: 2px solid var(--azul); }
-
-        /* ESTILO DA LISTA DE LOJAS */
-        .grid-lojas { display: grid; gap: 15px; margin-top: 20px; }
-        .card-loja { background: #0d1117; border: 1px solid #30363d; padding: 15px; border-radius: 8px; position: relative; transition: 0.2s; }
-        .card-loja:hover { border-color: var(--azul); transform: translateY(-2px); }
-        .card-loja h3 { margin: 0 0 5px 0; font-size: 1.1rem; color: white; }
-        .card-loja p { margin: 0; color: #8b949e; font-size: 0.9rem; }
-        
-        .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: bold; position: absolute; top: 15px; right: 15px; }
-        .badge.ativa { background: rgba(35, 134, 54, 0.2); color: var(--verde); border: 1px solid var(--verde); }
-        .badge.bloq { background: rgba(218, 54, 51, 0.2); color: var(--vermelho); border: 1px solid var(--vermelho); }
-
-        .actions { display: flex; gap: 10px; margin-top: 15px; }
-        .btn-mini { padding: 8px; margin: 0; font-size: 0.8rem; background: #21262d; border: 1px solid #30363d; color: #c9d1d9; }
-        .btn-mini:hover { background: var(--azul); border-color: var(--azul); color: white; }
+        body { background: var(--cor-fundo); color: #c9d1d9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: var(--cor-card); padding: 40px; border-radius: 10px; width: 100%; max-width: 500px; }
+        input { width: 100%; padding: 12px; margin-top: 5px; background: #0d1117; border: 1px solid #30363d; color: white; border-radius: 6px; }
+        button { width: 100%; padding: 15px; margin-top: 25px; background: #238636; color: white; border: none; cursor: pointer; font-weight: bold; border-radius: 6px;}
+        .resultado { margin-top: 30px; padding: 15px; background: rgba(88, 166, 255, 0.1); border: 1px solid var(--azul); display: none; border-radius: 6px;}
+        .link-box { background: #0d1117; padding: 10px; margin-top: 5px; color: var(--azul); word-break: break-all; cursor: pointer; border-radius: 4px;}
     </style>
 </head>
 <body>
+    <div class="container">
+        <h1 style="text-align:center; color:var(--azul)">🏭 Fábrica de Lojas</h1>
+        <label>Nome da Barbearia</label> <input type="text" id="nome-loja">
+        <label style="display:block; margin-top:15px">ID (Slug)</label> <input type="text" id="id-loja">
+        <button onclick="criarNovaLoja()">CRIAR LOJA</button>
 
-    <div class="tabs">
-        <button class="tab-btn ativo" onclick="mudarAba('lista')">📋 Todas as Lojas</button>
-        <button class="tab-btn" onclick="mudarAba('criar')">➕ Nova Loja</button>
-        <button class="tab-btn" onclick="mudarAba('editar')">✏️ Gerenciar</button>
-    </div>
-
-    <div id="aba-lista" class="container">
-        <h2>Minhas Barbearias</h2>
-        <button onclick="carregarTodasLojas()" style="background:#21262d; margin-top:0; padding:10px;">🔄 Atualizar Lista</button>
-        <div id="lista-lojas-container" class="grid-lojas">
-            <p style="text-align:center; color:#666;">Carregando...</p>
-        </div>
-    </div>
-
-    <div id="aba-criar" class="container" style="display:none;">
-        <h2>🏭 Fábrica de Lojas</h2>
-        <label>Nome da Barbearia</label> <input type="text" id="nome-loja" placeholder="Ex: Barbearia do Zé">
-        <label>ID (Slug)</label> <input type="text" id="id-loja" placeholder="ze_barber">
-        <label>Foto de Fundo (Opcional)</label> <input type="text" id="foto-loja" placeholder="Link da imagem (https://...)">
-        
-        <button class="btn-criar" onclick="criarNovaLoja()">CRIAR LOJA</button>
-
-        <div id="res-criar" class="resultado">
-            <h3 style="margin:0; color:var(--verde)">Sucesso!</h3>
-            <p>Link para o Median:</p>
+        <div id="resultado" class="resultado">
+            <h3 style="margin:0; color:#238636">Sucesso!</h3>
+            <p>Envie este link para o Median (Website URL):</p>
             <div class="link-box" onclick="copiar(this)" id="link-app">...</div>
         </div>
     </div>
 
-    <div id="aba-editar" class="container" style="display:none;">
-        <h2>👮‍♂️ Controle de Acesso</h2>
-        <label>ID da Loja</label> <input type="text" id="edit-id" placeholder="Ex: ze_barber">
-        <button onclick="buscarLoja()" style="margin-top:10px; background:#333; color:white; padding:8px;">🔍 Buscar Dados</button>
-        
-        <div id="form-editar" style="display:none; border-top: 1px solid #333; margin-top:20px; padding-top:10px;">
-            <label>Nome</label> <input type="text" id="edit-nome">
-            <label>Foto de Fundo</label> <input type="text" id="edit-foto">
-            
-            <label style="color:var(--azul);">🔑 Senha do Painel Admin</label> 
-            <input type="text" id="edit-senha" placeholder="Senha do parceiro">
-            <small style="color:#666">Você pode ver a senha atual ou digitar uma nova.</small>
-
-            <label style="color:var(--azul); font-weight:bold; margin-top:20px;">Status da Assinatura</label>
-            <select id="edit-status">
-                <option value="true">✅ ATIVA (Pagamento OK)</option>
-                <option value="false">⛔ BLOQUEADA (Devendo)</option>
-            </select>
-
-            <button class="btn-atualizar" onclick="salvarEdicao()">SALVAR ALTERAÇÕES</button>
-        </div>
-    </div>
-
     <script type="module">
-        import { db } from "./js/config.js";
-        import { doc, setDoc, getDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { db } from "./js/config.js"; // Usa sua config central
+        import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // Senha do Dev (Simples)
-        const SENHA_DEV = "mestre123";
-        if(sessionStorage.getItem('dev_logado') !== 'sim') {
-            const pass = prompt("Senha do Mestre:");
-            if(pass === SENHA_DEV) sessionStorage.setItem('dev_logado', 'sim');
-            else { document.body.innerHTML = "<h1>Acesso Negado</h1>"; throw new Error("Stop"); }
-        }
-
-        window.mudarAba = function(aba) {
-            document.querySelectorAll('.container').forEach(e => e.style.display = 'none');
-            document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('ativo'));
-            document.getElementById(`aba-${aba}`).style.display = 'block';
-            event.target.classList.add('ativo');
-            
-            if(aba === 'lista') carregarTodasLojas();
-        }
-
-        // --- LISTAR TODAS ---
-        window.carregarTodasLojas = async function() {
-            const container = document.getElementById('lista-lojas-container');
-            container.innerHTML = '<p style="text-align:center">Buscando...</p>';
-
-            try {
-                const querySnapshot = await getDocs(collection(db, "lojas"));
-                let html = "";
-                
-                if (querySnapshot.empty) {
-                    container.innerHTML = '<p style="text-align:center">Nenhuma loja criada ainda.</p>';
-                    return;
-                }
-
-                querySnapshot.forEach((doc) => {
-                    const dados = doc.data();
-                    const id = doc.id;
-                    const statusClass = (dados.ativa !== false) ? 'ativa' : 'bloq';
-                    const statusTexto = (dados.ativa !== false) ? 'ATIVA' : 'BLOQUEADA';
-                    const linkUrl = `${window.location.origin}/index.html?loja=${id}`;
-
-                    html += `
-                        <div class="card-loja">
-                            <span class="badge ${statusClass}">${statusTexto}</span>
-                            <h3>${dados.nome}</h3>
-                            <p>ID: <strong>${id}</strong></p>
-                            
-                            <div class="actions">
-                                <button class="btn-mini" onclick="editarDireto('${id}')">⚙️ Editar</button>
-                                <button class="btn-mini" onclick="copiarLink('${linkUrl}')">🔗 Copiar Link</button>
-                                <a href="${linkUrl}" target="_blank" class="btn-mini" style="text-decoration:none; display:inline-block;">↗️ Abrir</a>
-                            </div>
-                        </div>
-                    `;
-                });
-                container.innerHTML = html;
-            } catch (e) {
-                console.error(e);
-                container.innerHTML = `<p style="color:red">Erro ao listar: ${e.message}</p>`;
-            }
-        }
-        
-        carregarTodasLojas();
-
-        window.editarDireto = function(id) {
-            mudarAba('editar');
-            document.getElementById('edit-id').value = id;
-            buscarLoja();
-        }
-        window.copiarLink = function(url) {
-            navigator.clipboard.writeText(url);
-            alert("Link copiado para o App!");
-        }
-
-        // --- CRIAÇÃO ---
+        // Formata ID automático
         document.getElementById('nome-loja').addEventListener('input', (e) => {
             document.getElementById('id-loja').value = e.target.value.toLowerCase().replace(/ /g, '_').replace(/[^\w-]+/g, '');
         });
@@ -181,67 +41,25 @@
         window.criarNovaLoja = async function() {
             const nome = document.getElementById('nome-loja').value;
             const id = document.getElementById('id-loja').value;
-            const foto = document.getElementById('foto-loja').value;
-
-            if(!nome || !id) return alert("Preencha nome e ID!");
+            if(!nome || !id) return alert("Preencha tudo!");
 
             try {
                 const docRef = doc(db, "lojas", id);
                 const docSnap = await getDoc(docRef);
                 if(docSnap.exists()) return alert("ID já existe!");
 
+                // CRIA A LOJA COM SENHA PADRÃO 'admin123'
                 await setDoc(docRef, {
-                    nome: nome, senhaAdmin: "admin123", fotoFundo: foto || "", ativa: true,
+                    nome: nome,
+                    senhaAdmin: "admin123", // <--- IMPORTANTE: Senha inicial
                     horarioInicio: 9, horarioFim: 19, intervaloMinutos: 45,
                     servicos: [{ id: 0, nome: "Corte", preco: "R$ 35,00" }]
                 });
 
-                const baseUrl = window.location.origin;
+                // Gera apenas o link do APP (Cliente)
+                const baseUrl = window.location.origin; // Pega o link do Vercel atual
                 document.getElementById('link-app').innerText = `${baseUrl}/index.html?loja=${id}`;
-                document.getElementById('res-criar').style.display = 'block';
-                carregarTodasLojas(); 
-            } catch (e) { alert("Erro: " + e.message); }
-        }
-
-        // --- BUSCAR E EDITAR (COM SENHA) ---
-        window.buscarLoja = async function() {
-            const id = document.getElementById('edit-id').value;
-            if(!id) return alert("Digite o ID!");
-            try {
-                const docRef = doc(db, "lojas", id);
-                const docSnap = await getDoc(docRef);
-                if(!docSnap.exists()) return alert("Loja não encontrada!");
-                
-                const dados = docSnap.data();
-                document.getElementById('edit-nome').value = dados.nome;
-                document.getElementById('edit-foto').value = dados.fotoFundo || "";
-                
-                // --- MOSTRA A SENHA ATUAL ---
-                document.getElementById('edit-senha').value = dados.senhaAdmin || "";
-                // ---------------------------
-
-                document.getElementById('edit-status').value = (dados.ativa === false) ? "false" : "true";
-                document.getElementById('form-editar').style.display = 'block';
-            } catch (e) { alert("Erro: " + e.message); }
-        }
-
-        window.salvarEdicao = async function() {
-            const id = document.getElementById('edit-id').value;
-            const nome = document.getElementById('edit-nome').value;
-            const foto = document.getElementById('edit-foto').value;
-            const senha = document.getElementById('edit-senha').value; // PEGA A SENHA
-            const status = document.getElementById('edit-status').value === "true";
-            
-            try {
-                await updateDoc(doc(db, "lojas", id), { 
-                    nome: nome, 
-                    fotoFundo: foto, 
-                    ativa: status,
-                    senhaAdmin: senha // SALVA A NOVA SENHA
-                });
-                alert("Dados atualizados com sucesso!");
-                carregarTodasLojas(); 
-                mudarAba('lista');
+                document.getElementById('resultado').style.display = 'block';
             } catch (e) { alert("Erro: " + e.message); }
         }
 
