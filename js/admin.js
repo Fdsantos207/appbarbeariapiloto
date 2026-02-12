@@ -49,13 +49,25 @@ async function fazerLogin() {
     } catch (e) { console.error(e); alert("Erro: " + e.message); btn.innerText = "ENTRAR"; btn.disabled = false; }
 }
 
+
 function iniciarPainel() {
-    carregarAgenda(); carregarFinanceiro(); carregarConfiguracoesAdmin();
+    carregarAgenda(); 
+    carregarFinanceiro(); 
+    carregarConfiguracoesAdmin();
+    
+    // --- LÓGICA DA IMAGEM DE FUNDO ---
     getDoc(doc(db, "lojas", ID_LOJA)).then(snap => {
-        if(snap.exists() && snap.data().fotoFundo) {
-            document.body.style.backgroundImage = `url('${snap.data().fotoFundo}')`;
-            document.body.style.backgroundSize = "cover";
-            document.body.style.backgroundAttachment = "fixed";
+        if(snap.exists()) {
+            const dados = snap.data();
+            
+            // Verifica se tem foto salva
+            if(dados.fotoFundo) {
+                // Aplica a foto na variável CSS (igual ao app do cliente)
+                document.documentElement.style.setProperty('--bg-loja', `url('${dados.fotoFundo}')`);
+            } else {
+                // Se não tiver, pode colocar uma padrão ou deixar sem
+                // document.documentElement.style.setProperty('--bg-loja', `url('${IMAGEM_PADRAO}')`);
+            }
         }
     });
 }

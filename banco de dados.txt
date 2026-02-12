@@ -1,0 +1,8 @@
+const firebaseConfig = {
+  apiKey: "AIzaSyCEAeMxXbX047DhHYyAI-r4I_4eqlGA4W0",
+  authDomain: "appbarbeariapiloto.firebaseapp.com",
+  projectId: "appbarbeariapiloto",
+  storageBucket: "appbarbeariapiloto.firebasestorage.app",
+  messagingSenderId: "132643765315",
+  appId: "1:132643765315:web:60568343cecfa5720268f6"
+};

@@ -1,18 +1,16 @@
-/* css/style-admin.css - VERSÃO COMPLETA */
+/* css/style-admin.css - COM FOTO DE FUNDO */
 
-/* --- 1. VARIÁVEIS E CORES --- */
 :root {
     --cor-fundo: #121212;
-    --cor-fundo-card: #1E1E1E; /* Um pouco mais claro que o fundo */
+    --cor-fundo-card: rgba(30, 30, 30, 0.95); /* Leve transparência nos cards */
     --cor-input: #2a2a2a;
-    --cor-destaque: #D4AF37; /* Dourado */
-    --verde-zap: #25D366;
+    --cor-destaque: #D4AF37;
+    --verde-sucesso: #25D366;
     --vermelho-erro: #d9534f;
     --texto-principal: #e0e0e0;
     --texto-secundario: #a0a0a0;
 }
 
-/* --- 2. RESET GERAL --- */
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; outline: none; }
 
 body {
@@ -21,155 +19,90 @@ body {
     padding: 20px;
     padding-bottom: 80px;
     min-height: 100vh;
-    font-size: 16px;
+    position: relative; /* Necessário para o fundo funcionar */
 }
+
+/* --- AQUI ESTÁ O SEGREDO DA FOTO --- */
+body::before {
+    content: "";
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+    
+    /* O Javascript vai injetar a foto aqui na variável --bg-loja */
+    background-image: var(--bg-loja);
+    
+    background-size: cover;
+    background-position: center;
+    opacity: 0.15; /* Transparência para não atrapalhar o texto */
+    filter: grayscale(100%) contrast(120%); /* Efeito preto e branco estiloso */
+}
+/* ----------------------------------- */
 
 h2, h3 { color: var(--cor-destaque); font-weight: 600; }
 
-/* --- 3. MODAL DE LOGIN (Área Restrita) --- */
+/* MODAL LOGIN */
 #modal-login {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: #121212; /* Fundo sólido para esconder o app atrás */
-    z-index: 2000; /* Acima de tudo */
-    display: flex; align-items: center; justify-content: center;
+    background: #121212; /* Fundo sólido no login para focar */
+    z-index: 2000; display: flex; align-items: center; justify-content: center;
 }
-
 .login-box {
-    background: var(--cor-fundo-card);
-    padding: 30px;
-    border-radius: 12px;
-    width: 90%; max-width: 350px;
-    text-align: center;
-    border: 1px solid #333;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    background: var(--cor-fundo-card); padding: 30px; border-radius: 15px;
+    width: 90%; max-width: 350px; text-align: center; border: 1px solid #333;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.7);
 }
 
-/* --- 4. MENU LATERAL (SIDEBAR) --- */
+/* SIDEBAR */
 .sidebar {
-    position: fixed; top: 0; left: -260px; /* Escondido na esquerda */
-    width: 260px; height: 100%;
-    background: #1a1a1a;
-    z-index: 1000;
-    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    padding: 25px;
-    border-right: 1px solid #333;
-    box-shadow: 5px 0 15px rgba(0,0,0,0.5);
+    position: fixed; top: 0; left: -260px; width: 260px; height: 100%;
+    background: #1a1a1a; z-index: 1000; transition: 0.3s; padding: 25px;
+    border-right: 1px solid #333; box-shadow: 5px 0 15px rgba(0,0,0,0.5);
 }
-
-.sidebar.aberto { left: 0; /* Aparece */ }
+.sidebar.aberto { left: 0; }
 
 .menu-item {
-    display: block; padding: 15px;
-    color: #ccc; text-decoration: none;
-    border-radius: 8px; margin-bottom: 8px;
-    cursor: pointer; transition: 0.2s;
-    font-weight: 500;
+    display: block; padding: 15px; color: #ccc; text-decoration: none;
+    border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; font-weight: 500;
 }
-
-.menu-item:hover, .menu-item.ativo {
-    background: #333;
-    color: var(--cor-destaque);
-    border-left: 3px solid var(--cor-destaque);
-}
-
-.menu-item.voltar {
-    margin-top: 30px;
-    border: 1px solid var(--vermelho-erro);
-    color: var(--vermelho-erro);
-    text-align: center;
-}
+.menu-item:hover, .menu-item.ativo { background: #333; color: var(--cor-destaque); border-left: 3px solid var(--cor-destaque); }
+.menu-item.voltar { margin-top: 30px; border: 1px solid var(--vermelho-erro); color: var(--vermelho-erro); text-align: center; }
 
 .overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.7);
-    z-index: 900;
-    display: none;
-    backdrop-filter: blur(2px);
+    background: rgba(0,0,0,0.8); z-index: 900; display: none; backdrop-filter: blur(3px);
 }
 .overlay.aberto { display: block; }
 
-/* --- 5. FORMULÁRIOS E INPUTS --- */
-.form-group {
-    background: var(--cor-fundo-card);
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    border: 1px solid #333;
+/* LAYOUT GERAL */
+.form-group, .card-fin, .card-cliente {
+    background: var(--cor-fundo-card); /* Fundo semi-transparente */
+    border: 1px solid rgba(255,255,255,0.05); /* Borda sutil */
+    backdrop-filter: blur(5px); /* Desfoque atrás dos cards */
 }
 
-label { display: block; margin-bottom: 8px; color: var(--cor-destaque); font-size: 0.9rem; font-weight: 600; }
+.form-group { padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+label { display: block; margin-bottom: 8px; color: var(--cor-destaque); font-size: 0.9rem; }
 
 input, select {
-    width: 100%; padding: 14px;
-    background: var(--cor-input);
-    border: 1px solid #444;
-    color: white; border-radius: 8px;
-    margin-bottom: 15px; font-size: 1rem;
+    width: 100%; padding: 14px; background: var(--cor-input); border: 1px solid #444;
+    color: white; border-radius: 8px; margin-bottom: 15px; font-size: 1rem;
 }
-
 input:focus { border-color: var(--cor-destaque); }
 
-/* --- 6. BOTÕES --- */
+/* BOTÕES */
 button { cursor: pointer; transition: 0.2s; font-family: 'Poppins', sans-serif; }
-button:active { transform: scale(0.98); }
+.btn-salvar { width: 100%; padding: 15px; background: var(--verde-sucesso); border: none; border-radius: 8px; color: white; font-weight: bold; font-size: 1rem; }
+.btn-remove { background: var(--vermelho-erro); border: none; color: white; border-radius: 5px; padding: 0 15px; font-weight: bold; }
 
-.btn-salvar {
-    width: 100%; padding: 15px;
-    background: var(--verde-zap);
-    border: none; border-radius: 8px;
-    color: white; font-weight: bold; font-size: 1rem;
-    box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3);
-}
-
-.btn-remove {
-    background: var(--vermelho-erro);
-    border: none; color: white;
-    border-radius: 5px; padding: 0 15px;
-    font-weight: bold;
-}
-
-/* --- 7. FINANCEIRO (GRID) --- */
-.grid-financeiro {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.card-fin {
-    background: var(--cor-fundo-card);
-    padding: 20px;
-    border-radius: 12px;
-    border: 1px solid #333;
-    text-align: center;
-}
-
+/* FINANCEIRO */
+.grid-financeiro { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+.card-fin { padding: 20px; border-radius: 12px; text-align: center; }
 .card-fin h3 { font-size: 0.85rem; color: #888; margin-bottom: 5px; font-weight: normal; }
 .card-fin .valor { font-size: 1.4rem; color: var(--cor-destaque); font-weight: bold; }
-
-/* Card Destaque (Faturamento Total) */
-.card-fin.destaque {
-    grid-column: span 2; /* Ocupa a largura toda */
-    background: linear-gradient(135deg, #D4AF37 0%, #a3842c 100%);
-    border: none;
-    color: #000;
-}
+.card-fin.destaque { grid-column: span 2; background: linear-gradient(135deg, #D4AF37 0%, #a3842c 100%); border: none; }
 .card-fin.destaque h3 { color: #222; font-weight: bold; }
-.card-fin.destaque .valor { color: #000; text-shadow: 0 1px 0 rgba(255,255,255,0.3); }
+.card-fin.destaque .valor { color: #000; }
 
-/* --- 8. LISTA DE CLIENTES (AGENDA) --- */
-.card-cliente {
-    background: var(--cor-fundo-card);
-    padding: 15px;
-    margin-bottom: 10px;
-    border-radius: 8px;
-    border-left: 4px solid var(--cor-destaque);
-    display: flex; justify-content: space-between; align-items: center;
-}
-
-/* --- 9. ITENS DE SERVIÇO (EDIÇÃO) --- */
-.item-servico {
-    display: flex; gap: 10px; margin-bottom: 10px;
-    background: #252525; padding: 10px; border-radius: 8px;
-}
-.item-servico input { margin-bottom: 0; border: none; }
+/* AGENDA E SERVIÇOS */
+.card-cliente { padding: 15px; margin-bottom: 10px; border-radius: 8px; border-left: 4px solid var(--cor-destaque); display: flex; justify-content: space-between; align-items: center; }
+.item-servico { display: flex; gap: 10px; margin-bottom: 10px; }
+.item-servico input { margin-bottom: 0; }
