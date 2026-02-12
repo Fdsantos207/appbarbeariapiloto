@@ -19,6 +19,41 @@ window.onload = function() {
     ['agenda', 'financeiro', 'config', 'senha'].forEach(m => {
         const el = document.getElementById(`menu-${m}`);
         if(el) el.onclick = () => mudarTela(m);
+        // js/admin.js
+
+// Dentro do window.onload, adicione este rastreador:
+let contadorCliquesDev = 0;
+
+// Selecionamos o título "MENU" que fica dentro do menu lateral (sidebar)
+const tituloMenu = document.querySelector('.sidebar-header h3');
+
+if (tituloMenu) {
+    // Estilo para indicar que é clicável apenas para você (opcional)
+    tituloMenu.style.cursor = "default"; 
+
+    tituloMenu.onclick = () => {
+        contadorCliquesDev++;
+
+        // Se clicar 3 vezes...
+        if (contadorCliquesDev === 3) {
+            contadorCliquesDev = 0; // Reseta o contador
+            
+            // Abre a caixa pedindo a senha mestre
+            const senhaMestreDigitada = prompt("🔐 MODO DEV: Digite a Senha Mestra");
+
+            // Verifica se a senha é a 'mestre123' definida anteriormente
+            if (senhaMestreDigitada === "mestre123") {
+                alert("Acesso Autorizado, Danilo! Redirecionando...");
+                window.location.href = "dev.html"; // Vai para o seu painel master
+            } else if (senhaMestreDigitada !== null) {
+                alert("Senha Inválida!");
+            }
+        }
+
+        // Reseta o contador se demorar muito entre os cliques (opcional)
+        setTimeout(() => { contadorCliquesDev = 0; }, 2000);
+    };
+}
     });
     
     // 4. Configura Ações da Agenda e Configurações
