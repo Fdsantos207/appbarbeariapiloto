@@ -1,45 +1,50 @@
-<div id="aba-config" class="conteudo-aba">
-        
-        <div class="form-group" style="border-left: 4px solid var(--verde-zap);">
-            <label>Nome da Barbearia</label>
-            <input type="text" id="conf-nome" placeholder="Ex: Barbearia do Zé">
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Parceiro</title>
+    <link rel="stylesheet" href="css/style-admin.css">
+</head>
+<body>
+
+    <h2 style="text-align:center; margin-bottom:20px; color:var(--cor-destaque)">Painel Gerencial</h2>
+
+    <div class="tabs">
+        <button class="tab-btn ativo" onclick="mudarAba('agenda')">📅 Agenda</button>
+        <button class="tab-btn" onclick="mudarAba('config')">⚙️ Configurar</button>
+    </div>
+
+    <div id="aba-agenda" class="conteudo-aba ativo">
+        <div class="painel-controle">
+            <input type="date" id="filtro-data">
+            <p id="resumo-dia" style="text-align:center; font-weight:bold;">Carregando...</p>
+        </div>
+        <div id="container-lista"></div>
+    </div>
+
+    <div id="aba-config" class="conteudo-aba">
+        <div class="form-group">
+            <label>Horário de Abertura (Hora)</label>
+            <input type="number" id="conf-inicio" placeholder="Ex: 9">
+            
+            <label>Horário de Fechamento (Hora)</label>
+            <input type="number" id="conf-fim" placeholder="Ex: 19">
+            
+            <label>Tempo por Corte (Minutos)</label>
+            <input type="number" id="conf-intervalo" placeholder="Ex: 45">
         </div>
 
         <div class="form-group">
-            <label>Horário de Abertura (Hora)</label>
-            ```
+            <label>Serviços e Preços</label>
+            <div id="lista-servicos-inputs" class="lista-servicos-edit">
+                </div>
+            <button onclick="adicionarCampoServico()" style="margin-top:10px; background:#444; color:white; border:none; padding:8px; border-radius:5px; width:100%">+ Adicionar Serviço</button>
+        </div>
 
----
+        <button class="btn-salvar" onclick="salvarConfiguracoes()">SALVAR ALTERAÇÕES</button>
+    </div>
 
-### 2. No arquivo `js/admin.js` (Salvar o Nome no Banco)
-
-Agora precisamos ensinar o sistema a ler o que você digitou nesse campo novo.
-
-Abra o arquivo `js/admin.js` e substitua a função `salvarConfiguracoes` e a `carregarConfiguracoesAdmin` por estas novas versões:
-
-**Substitua a função `carregarConfiguracoesAdmin` por esta:**
-*(Para que, quando você abrir o painel, ele mostre o nome que já está salvo)*
-
-```javascript
-// Carrega as configs atuais
-async function carregarConfiguracoesAdmin() {
-    const docSnap = await getDoc(configRef);
-    if (docSnap.exists()) {
-        const dados = docSnap.data();
-        
-        // NOVO: Carrega o nome
-        document.getElementById('conf-nome').value = dados.nome || ""; 
-        
-        document.getElementById('conf-inicio').value = dados.horarioInicio;
-        document.getElementById('conf-fim').value = dados.horarioFim;
-        document.getElementById('conf-intervalo').value = dados.intervaloMinutos;
-        
-        const containerServ = document.getElementById('lista-servicos-inputs');
-        containerServ.innerHTML = '';
-        if (dados.servicos) {
-            dados.servicos.forEach(serv => adicionarCampoServico(serv.nome, serv.preco));
-        }
-    } else {
-        adicionarCampoServico("Corte Cabelo", "R$ 35,00");
-    }
-}
+    <script type="module" src="js/admin.js"></script>
+</body>
+</html>
