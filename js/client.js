@@ -1,4 +1,10 @@
 // js/client.js
+
+// SISTEMA ANTI-TRAVAMENTO
+window.onerror = function(msg, source, lineno) {
+    document.body.innerHTML = `<div style="background:darkred;color:white;padding:20px;text-align:center;"><h2>❌ Erro no App</h2><p>${msg}</p><p>Linha: ${lineno}</p></div>`;
+};
+
 import { db, ID_LOJA, IMAGEM_PADRAO } from "./config.js";
 import { collection, getDocs, addDoc, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -26,8 +32,10 @@ window.onload = async function() {
             document.getElementById('nome-barbearia').innerText = LOJA_CONFIG.nome;
 
             renderizarServicos();
-            elData.min = new Date().toISOString().split("T")[0];
-            elData.addEventListener('change', carregarHorarios);
+            if(elData) {
+                elData.min = new Date().toISOString().split("T")[0];
+                elData.addEventListener('change', carregarHorarios);
+            }
             document.getElementById('conteudo-principal').classList.add('ativo');
 
             const clienteSalvo = localStorage.getItem('cliente_barbearia');
@@ -44,16 +52,20 @@ window.onload = async function() {
     configurarCliques();
 };
 
-function configuringCliques() {
-    btnAgendar.addEventListener('click', () => {
-        if (!servicoSelecionado || !horarioSelecionado || !elData.value) return mostrarToast("⚠️ Selecione tudo!");
-        elModal.classList.add('aberto');
-    });
+function configurarCliques() {
+    if(btnAgendar) {
+        btnAgendar.addEventListener('click', () => {
+            if (!servicoSelecionado || !horarioSelecionado || !elData.value) return mostrarToast("⚠️ Selecione tudo!");
+            elModal.classList.add('aberto');
+        });
+    }
 
     document.getElementById('btn-salvar-agendamento').addEventListener('click', salvarNoFirebase);
     document.getElementById('btn-cancelar-modal').addEventListener('click', () => elModal.classList.remove('aberto'));
     
-    document.getElementById('btn-abrir-menu').addEventListener('click', toggleMenu);
+    const btnMenu = document.getElementById('btn-abrir-menu');
+    if(btnMenu) btnMenu.addEventListener('click', toggleMenu);
+    
     document.getElementById('btn-fechar-menu').addEventListener('click', toggleMenu);
     document.getElementById('overlay-menu').addEventListener('click', toggleMenu);
     document.getElementById('link-meus-agendamentos').addEventListener('click', () => { toggleMenu(); verMeusAgendamentos(); });
@@ -144,8 +156,13 @@ async function salvarNoFirebase() {
 }
 
 function toggleMenu() {
-    document.getElementById('sidebar').classList.toggle('aberto');
-    document.getElementById('overlay-menu').classList.toggle('aberto');
+    const sb = document.getElementById('sidebar');
+    const ov = document.getElementById('overlay-menu');
+    if(sb) sb.classList.toggle('aberto');
+    if(ov) {
+        if(ov.style.display === 'block') ov.style.display = 'none';
+        else ov.style.display = 'block';
+    }
 }
 function mostrarToast(msg) {
     const t = document.getElementById('toast'); t.innerText = msg; t.className = "toast show";
@@ -158,6 +175,3 @@ async function verMeusAgendamentos() {
     if(snap.empty) return alert("Nenhum agendamento.");
     let msg = "Seus horários:\n"; snap.forEach(d => { const a = d.data(); msg += `${a.data} - ${a.horario}\n` }); alert(msg);
 }
-
-// Pequena correção: nome da função estava errado
-function configurarCliques() { configuringCliques(); } // Redireciona para a função correta

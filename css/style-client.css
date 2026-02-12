@@ -54,7 +54,7 @@ input[type="date"] { width: 100%; padding: 15px; background: #222; border: 1px s
 .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 150; display: none; }
 .overlay.aberto { display: block; }
 
-/* MODAL BLINDADO */
+/* --- MODAL BLINDADO (CORREÇÃO DE Z-INDEX) --- */
 .modal { 
     display: none; 
     position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
