@@ -36,8 +36,19 @@
     <div id="tela-agenda" class="conteudo-tela">
         <div class="painel-controle">
             <input type="date" id="filtro-data">
-            <p id="resumo-dia" style="text-align:center; font-weight:bold;">Carregando...</p>
+            <p id="resumo-dia" style="text-align:center; font-weight:bold;"></p>
         </div>
+        <div id="tela-agenda" class="conteudo-tela">
+    <div class="form-group">
+        <label>Selecione a Data</label>
+        <input type="date" id="filtro-data">
+        
+        <button id="btn-bloquear-modal" style="width:100%; padding:15px; background:#1a1a1a; border:1px solid #D4AF37; color:#D4AF37; border-radius:12px; font-weight:bold; cursor:pointer; margin-top:10px;">🚫 BLOQUEAR UM HORÁRIO</button>
+        
+        <p id="resumo-dia" style="text-align:center; font-weight:bold; margin-top:15px; color:#888;">Carregando agenda...</p>
+    </div>
+    <div id="container-lista"></div>
+</div>
         <div id="container-lista"></div>
     </div>
 
