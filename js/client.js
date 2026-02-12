@@ -213,4 +213,44 @@ function atualizarBotao() {
 async function salvarNoFirebase() {
     const nome = document.getElementById('cliente-nome').value;
     const zap = document.getElementById('cliente-zap').value;
-    const btn = document.getElementById('btn-salvar-ag
+    const btn = document.getElementById('btn-salvar-agendamento');
+
+    if(!nome || !zap) {
+        alert("Preencha Nome e WhatsApp");
+        return;
+    }
+
+    btn.innerText = "AGENDANDO...";
+    btn.disabled = true;
+
+    try {
+        await addDoc(collection(db, "lojas", ID_LOJA, "agendamentos"), {
+            data: elData.value,
+            horario: horarioSelecionado,
+            servico: servicoSelecionado.nome,
+            preco: servicoSelecionado.preco,
+            cliente_nome: nome,
+            cliente_zap: zap,
+            criadoEm: new Date()
+        });
+
+        localStorage.setItem('cliente_barbearia', JSON.stringify({ nome, zap }));
+        alert("Agendamento Confirmado! ✅");
+        location.reload();
+
+    } catch(e) {
+        alert("Erro: " + e.message);
+        btn.innerText = "TENTAR NOVAMENTE";
+        btn.disabled = false;
+    }
+}
+
+function toggleMenu() {
+    const sb = document.getElementById('sidebar');
+    const ov = document.getElementById('overlay-menu');
+    if(sb) sb.classList.toggle('aberto');
+    if(ov) {
+        if(ov.style.display === 'block') ov.style.display = 'none';
+        else ov.style.display = 'block';
+    }
+}
