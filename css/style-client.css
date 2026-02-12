@@ -1,171 +1,56 @@
-/* --- ESTILO PREMIUM V4 --- */
 :root {
-    --bg-fundo: #0a0a0a;
-    --bg-card: rgba(20, 20, 20, 0.9);
+    --fundo: #0a0a0a;
+    --card: rgba(30, 30, 30, 0.8);
     --dourado: #D4AF37;
-    --gradiente-dourado: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728);
-    --sombra-dourada: 0 0 20px rgba(212, 175, 55, 0.15);
+    --gradiente: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
-body { background: var(--bg-fundo); color: white; padding-bottom: 120px; overflow-x: hidden; }
+body { background: var(--fundo); color: white; padding-bottom: 120px; overflow-x: hidden; }
 
 /* HEADER */
 header { 
     display: flex; justify-content: space-between; padding: 15px 25px; 
-    background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(10px);
+    background: rgba(10,10,10,0.95); backdrop-filter: blur(10px);
     position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(212, 175, 55, 0.2);
 }
-header h1 { background: var(--gradiente-dourado); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.3rem; text-transform: uppercase; font-weight: 700; }
+header h1 { background: var(--gradiente); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.3rem; text-transform: uppercase; font-weight: 700; }
 #btn-abrir-menu { background: none; border: none; color: var(--dourado); font-size: 2rem; cursor: pointer; }
 
-/* MENU LATERAL PREMIUM (CORREÇÃO DO MODO LISTA) */
+/* MENU LATERAL CORRIGIDO */
 .sidebar { 
-    position: fixed; 
-    top: 0; 
-    right: -320px; /* Esconde totalmente o menu na direita */
-    width: 300px; 
-    height: 100%; 
-    background: #0f0f0f; /* Fundo escuro sólido */
-    z-index: 3000; /* Fica acima de tudo */
-    transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
-    padding: 35px; 
-    border-left: 1px solid var(--dourado); 
+    position: fixed; top: 0; right: -320px; width: 300px; height: 100%; 
+    background: #0f0f0f; z-index: 3000; transition: 0.5s; padding: 35px; border-left: 1px solid var(--dourado); 
 }
-
-/* Quando o JS adiciona a classe .aberto */
-.sidebar.aberto { 
-    right: 0; 
-    box-shadow: -15px 0 40px rgba(0,0,0,0.8); 
-}
-
-.sidebar-header {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 40px; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 15px;
-}
-.sidebar-header h3 { color: var(--dourado); letter-spacing: 1px; font-size: 1rem; }
-#btn-fechar-menu { background: none; border: none; color: #666; font-size: 1.8rem; cursor: pointer; }
-
-.sidebar nav a { 
-    display: block; padding: 18px 0; color: #ddd; text-decoration: none; 
-    border-bottom: 1px solid #222; font-size: 1.1rem; transition: 0.3s;
-}
-.sidebar nav a:hover { color: var(--dourado); padding-left: 10px; }
-
-/* FUNDO ESCURO DO MENU */
-.overlay { 
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-    background: rgba(0,0,0,0.85); z-index: 2500; display: none; 
-}
+.sidebar.aberto { right: 0; box-shadow: -15px 0 40px rgba(0,0,0,0.8); }
+.overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2500; display: none; }
 .overlay.aberto { display: block; }
+.sidebar nav a { display: block; padding: 18px 0; color: #ddd; text-decoration: none; border-bottom: 1px solid #222; }
 
-/* CARDS E ELEMENTOS DA PÁGINA */
-.container { padding: 25px; max-width: 550px; margin: 0 auto; }
-.section-title { color: var(--dourado); font-size: 0.85rem; letter-spacing: 2px; margin: 35px 0 15px; font-weight: 700; text-transform: uppercase; }
-
-.servico-card { 
-    background: var(--bg-card); padding: 22px; border-radius: 16px; margin-bottom: 15px; 
-    display: flex; justify-content: space-between; border: 1px solid rgba(212, 175, 55, 0.1); 
-    cursor: pointer; transition: 0.3s;
-}
-.servico-card.selecionado { border-color: var(--dourado); box-shadow: var(--sombra-dourada); background: rgba(212, 175, 55, 0.05); }
-
-input[type="date"] { 
-    width: 100%; padding: 18px; background: #000; border: 1px solid rgba(212, 175, 55, 0.2); 
-    color: white; border-radius: 12px; font-size: 1.1rem; color-scheme: dark;
-}
-
-.grade-horarios { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-.horario-btn { background: #111; border: 1px solid #222; padding: 14px 0; border-radius: 10px; text-align: center; }
-.horario-btn.selecionado { background: var(--gradiente-dourado); color: #000; font-weight: bold; border: none; }
-
-/* --- MODAL FINALIZAR (CORREÇÃO DE LAYOUT) --- */
-.modal {
-    display: none !important;
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.95); /* Fundo bem escuro */
-    z-index: 4000;
-    align-items: center; justify-content: center;
-    backdrop-filter: blur(5px); /* Desfoque no fundo */
+/* MODAL CORRIGIDO */
+.modal { 
+    display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+    background: rgba(0,0,0,0.9); z-index: 4000; align-items: center; justify-content: center; 
 }
 .modal.aberto { display: flex !important; }
+.modal-content { background: #111; padding: 35px; border-radius: 25px; width: 90%; max-width: 400px; border: 2px solid var(--dourado); text-align: center; }
+.modal-content h2 { color: var(--dourado); margin-bottom: 15px; }
+.modal-content input { width: 100%; padding: 15px; margin: 10px 0; background: #000; border: 1px solid #333; color: white; border-radius: 8px; }
+.btn-confirmar { width: 100%; padding: 18px; background: var(--gradiente); border: none; border-radius: 50px; font-weight: 800; cursor: pointer; }
+.btn-cancelar { background: none; border: none; color: #666; margin-top: 15px; text-decoration: underline; }
 
-.modal-content {
-    background: #111; /* Fundo da janela */
-    padding: 40px 30px;
-    border-radius: 25px;
-    width: 90%; max-width: 400px;
-    border: 2px solid var(--dourado); /* Borda dourada visível */
-    text-align: center;
-    box-shadow: 0 0 40px rgba(212, 175, 55, 0.3); /* Sombra dourada */
-    display: flex;
-    flex-direction: column;
-    gap: 15px; /* Espaço entre os itens */
-}
+/* CONTEÚDO */
+.container { padding: 25px; max-width: 550px; margin: 0 auto; }
+.section-title { color: var(--dourado); font-size: 0.85rem; letter-spacing: 2px; margin: 35px 0 15px; font-weight: 700; text-transform: uppercase; }
+.servico-card { background: var(--card); padding: 22px; border-radius: 16px; margin-bottom: 15px; display: flex; justify-content: space-between; border: 1px solid rgba(212, 175, 55, 0.1); cursor: pointer; }
+.servico-card.selecionado { border-color: var(--dourado); box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); }
+input[type="date"] { width: 100%; padding: 18px; background: #000; border: 1px solid rgba(212, 175, 55, 0.2); color: white; border-radius: 12px; color-scheme: dark; }
+.grade-horarios { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.horario-btn { background: #111; border: 1px solid #222; padding: 14px 0; border-radius: 10px; text-align: center; cursor: pointer; }
+.horario-btn.selecionado { background: var(--gradiente); color: #000; font-weight: bold; }
+.horario-btn.ocupado { opacity: 0.2; text-decoration: line-through; }
 
-.modal-content h2 {
-    color: var(--dourado);
-    font-size: 1.6rem;
-    margin-bottom: 5px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-weight: 800;
-}
-
-.modal-content p {
-    color: #ccc;
-    margin-bottom: 25px;
-    font-size: 1rem;
-}
-
-/* Inputs dentro do modal */
-.modal-content input {
-    width: 100%;
-    padding: 16px;
-    background: #0a0a0a; /* Fundo preto */
-    border: 1px solid rgba(212, 175, 55, 0.5); /* Borda dourada sutil */
-    color: white;
-    border-radius: 12px;
-    font-size: 1.1rem;
-    outline: none;
-    transition: 0.3s;
-}
-.modal-content input:focus {
-    border-color: var(--dourado);
-    box-shadow: 0 0 15px rgba(212, 175, 55, 0.6); /* Brilho ao clicar */
-}
-
-/* Botão Confirmar dentro do modal */
-.btn-confirmar {
-    width: 100%;
-    padding: 18px;
-    background: var(--gradiente-dourado);
-    border: none;
-    border-radius: 50px; /* Botão arredondado */
-    color: #000;
-    font-weight: 900;
-    font-size: 1.2rem;
-    cursor: pointer;
-    transition: 0.3s;
-    box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4);
-    margin-top: 10px;
-}
-.btn-confirmar:hover {
-    transform: scale(1.02);
-    box-shadow: 0 8px 30px rgba(212, 175, 55, 0.6);
-}
-
-/* Botão Cancelar dentro do modal */
-.btn-cancelar {
-    background: none;
-    border: none;
-    color: #999;
-    margin-top: 15px;
-    cursor: pointer;
-    font-size: 1rem;
-    text-decoration: underline;
-    transition: 0.3s;
-}
-.btn-cancelar:hover {
-    color: var(--dourado);
-}
+/* BOTÃO FIXO */
+.fab-container { position: fixed; bottom: 0; left: 0; width: 100%; padding: 25px; background: linear-gradient(transparent, #0a0a0a 60%); z-index: 95; display: flex; justify-content: center; }
+.btn-agendar { width: 100%; max-width: 500px; padding: 20px; border-radius: 50px; border: none; background: var(--gradiente); color: #000; font-weight: 800; font-size: 1.1rem; opacity: 0.4; }
+.btn-agendar.ativo { opacity: 1; box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4); }

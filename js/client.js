@@ -7,82 +7,35 @@ let LOJA_CONFIG = null;
 
 window.onload = async function() {
     try {
-        // Busca a loja na coleção "lojas" (minúsculo)
-        const docSnap = await getDoc(doc(db, "lojas", ID_LOJA)); 
+        const docSnap = await getDoc(doc(db, "lojas", ID_LOJA));
         if (docSnap.exists()) {
             LOJA_CONFIG = docSnap.data();
             document.getElementById('nome-barbearia').innerText = LOJA_CONFIG.nome;
             renderizarServicos();
             document.getElementById('data-agendamento').addEventListener('change', carregarHorarios);
         } else {
-            alert("Erro: Loja não cadastrada.");
+            alert("Erro: Loja não encontrada no banco.");
         }
     } catch (e) { console.error(e); }
-    
-    // Liga as funções aos botões
     configurarCliques();
 };
 
 function configurarCliques() {
-    // Menu Hamburguer
     document.getElementById('btn-abrir-menu').onclick = toggleMenu;
     document.getElementById('btn-fechar-menu').onclick = toggleMenu;
     document.getElementById('overlay').onclick = toggleMenu;
-
-    // BOTÃO MEUS AGENDAMENTOS (A correção está aqui)
-    document.getElementById('btn-meus-agendamentos').onclick = (e) => {
-        e.preventDefault();
-        toggleMenu(); // Fecha o menu primeiro
-        verMeusAgendamentos(); // Chama a busca
-    };
-
-    // Finalizar Agendamento
     document.getElementById('btn-finalizar').onclick = () => {
-        if(servicoSelecionado && horarioSelecionado) {
-            document.getElementById('modal-cadastro').classList.add('aberto');
-        } else {
-            alert("Selecione serviço e horário!");
-        }
+        if(servicoSelecionado && horarioSelecionado) document.getElementById('modal-cadastro').classList.add('aberto');
+        else alert("Selecione serviço e horário!");
     };
-
-    document.getElementById('btn-cancelar-cadastro').onclick = () => {
-        document.getElementById('modal-cadastro').classList.remove('aberto');
-    };
-
+    document.getElementById('btn-cancelar-cadastro').onclick = () => document.getElementById('modal-cadastro').classList.remove('aberto');
     document.getElementById('btn-confirma-agendamento').onclick = finalizarAgendamento;
+    document.getElementById('btn-meus-agendamentos').onclick = (e) => { e.preventDefault(); toggleMenu(); verMeusAgendamentos(); };
 }
 
 function toggleMenu() {
     document.getElementById('sidebar').classList.toggle('aberto');
     document.getElementById('overlay').classList.toggle('aberto');
-}
-
-// --- FUNÇÃO PARA VER HISTÓRICO ---
-async function verMeusAgendamentos() {
-    const zap = prompt("Confirme seu WhatsApp (apenas números):");
-    if(!zap) return;
-
-    try {
-        // Busca na subcoleção agendamentos
-        const q = query(collection(db, "lojas", ID_LOJA, "agendamentos"), where("cliente_zap", "==", zap));
-        const snap = await getDocs(q);
-
-        if(snap.empty) {
-            alert("Nenhum agendamento encontrado para este número.");
-            return;
-        }
-
-        let msg = "Seus Agendamentos:\n";
-        snap.forEach(d => {
-            const a = d.data();
-            msg += `\n📅 ${a.data} às ${a.horario}\n✂️ ${a.servico}\n`;
-        });
-        alert(msg);
-
-    } catch (e) {
-        console.error(e);
-        alert("Erro ao buscar agendamentos.");
-    }
 }
 
 function renderizarServicos() {
@@ -106,11 +59,9 @@ async function carregarHorarios() {
     const data = document.getElementById('data-agendamento').value;
     const div = document.getElementById('lista-horarios');
     div.innerHTML = "Buscando...";
-
     const q = query(collection(db, "lojas", ID_LOJA, "agendamentos"), where("data", "==", data));
     const snap = await getDocs(q);
     const ocupados = snap.docs.map(d => d.data().horario);
-
     div.innerHTML = "";
     let atual = LOJA_CONFIG.horarioInicio * 60;
     while(atual < LOJA_CONFIG.horarioFim * 60) {
@@ -132,27 +83,27 @@ async function carregarHorarios() {
 }
 
 function atualizarBotao() {
-    if(servicoSelecionado && horarioSelecionado) {
-        document.getElementById('btn-finalizar').classList.add('ativo');
-    }
+    if(servicoSelecionado && horarioSelecionado) document.getElementById('btn-finalizar').classList.add('ativo');
 }
 
 async function finalizarAgendamento() {
     const nome = document.getElementById('cliente-nome').value;
     const zap = document.getElementById('cliente-zap').value;
     if(!nome || !zap) return alert("Preencha tudo!");
+    await addDoc(collection(db, "lojas", ID_LOJA, "agendamentos"), {
+        cliente_nome: nome, cliente_zap: zap, data: document.getElementById('data-agendamento').value,
+        horario: horarioSelecionado, servico: servicoSelecionado.nome, preco: servicoSelecionado.preco
+    });
+    alert("Agendado com sucesso! ✅"); location.reload();
+}
 
-    try {
-        await addDoc(collection(db, "lojas", ID_LOJA, "agendamentos"), {
-            cliente_nome: nome,
-            cliente_zap: zap,
-            data: document.getElementById('data-agendamento').value,
-            horario: horarioSelecionado,
-            servico: servicoSelecionado.nome,
-            preco: servicoSelecionado.preco,
-            criadoEm: new Date()
-        });
-        alert("Agendado com sucesso! ✅");
-        location.reload();
-    } catch(e) { alert("Erro ao agendar."); }
+async function verMeusAgendamentos() {
+    const zap = prompt("Confirme seu WhatsApp:");
+    if(!zap) return;
+    const q = query(collection(db, "lojas", ID_LOJA, "agendamentos"), where("cliente_zap", "==", zap));
+    const snap = await getDocs(q);
+    if(snap.empty) return alert("Nenhum agendamento encontrado.");
+    let texto = "Seus Agendamentos:\n";
+    snap.forEach(d => { const a = d.data(); texto += `\n📅 ${a.data} às ${a.horario}\n✂️ ${a.servico}\n`; });
+    alert(texto);
 }
