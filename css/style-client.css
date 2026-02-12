@@ -42,6 +42,44 @@ header h1 { background: var(--gradiente); -webkit-background-clip: text; -webkit
 /* CONTEÚDO */
 .container { padding: 25px; max-width: 550px; margin: 0 auto; }
 .section-title { color: var(--dourado); font-size: 0.85rem; letter-spacing: 2px; margin: 35px 0 15px; font-weight: 700; text-transform: uppercase; }
+/* --- ESTILO DAS ABAS (TABS) --- */
+.tabs-categorias {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    color: #888;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.tab-btn.ativo {
+    background: var(--gradiente-dourado); /* Usando o gradiente premium que já temos */
+    color: #000;
+    border: none;
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+}
+
+/* Badge de desconto para Combos */
+.badge-combo {
+    background: #ff4444;
+    color: white;
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 5px;
+    vertical-align: middle;
+}
 .servico-card { background: var(--card); padding: 22px; border-radius: 16px; margin-bottom: 15px; display: flex; justify-content: space-between; border: 1px solid rgba(212, 175, 55, 0.1); cursor: pointer; }
 .servico-card.selecionado { border-color: var(--dourado); box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); }
 input[type="date"] { width: 100%; padding: 18px; background: #000; border: 1px solid rgba(212, 175, 55, 0.2); color: white; border-radius: 12px; color-scheme: dark; }
