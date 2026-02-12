@@ -80,7 +80,73 @@ header h1 { background: var(--gradiente); -webkit-background-clip: text; -webkit
     margin-left: 5px;
     vertical-align: middle;
 }
-.servico-card { background: var(--card); padding: 22px; border-radius: 16px; margin-bottom: 15px; display: flex; justify-content: space-between; border: 1px solid rgba(212, 175, 55, 0.1); cursor: pointer; }
+/* --- CARD DE SERVIÇO RESPONSIVO --- */
+.servico-card {
+    background: var(--bg-card-glass); /* Mantém o visual glass */
+    backdrop-filter: blur(10px);
+    padding: 15px; 
+    border-radius: 16px;
+    margin-bottom: 12px;
+    
+    /* MUDANÇA: Flex-direction column em telas muito pequenas para o preço ir para baixo */
+    display: flex;
+    flex-direction: row; 
+    justify-content: space-between;
+    align-items: center;
+    
+    border: 1px solid var(--dourado-borda);
+    box-shadow: var(--sombra-suave);
+    cursor: pointer;
+    transition: 0.2s ease;
+    min-height: 80px; 
+}
+
+/* Área do Texto (Esquerda) */
+.servico-card > div:first-child {
+    flex: 1; /* Ocupa o máximo de espaço possível */
+    padding-right: 10px; /* Espaço para não colar no preço */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.servico-card h3 {
+    font-size: 0.95rem; /* Fonte base um pouco menor */
+    font-weight: 600;
+    line-height: 1.3;
+    color: #fff;
+    margin-bottom: 4px;
+    word-break: break-word; /* Quebra palavras muito longas se necessário */
+}
+
+/* Preço (Direita) */
+.servico-card p {
+    color: var(--dourado-texto);
+    font-weight: 700;
+    font-size: 1rem;
+    white-space: nowrap; /* O preço nunca quebra linha */
+    text-align: right;
+    align-self: center; /* Centraliza verticalmente */
+}
+
+/* --- AJUSTE ESPECIAL PARA CELULAR PEQUENO (O PULO DO GATO) --- */
+@media (max-width: 380px) {
+    .servico-card {
+        flex-direction: column; /* Coloca um embaixo do outro se a tela for minúscula */
+        align-items: flex-start; /* Alinha tudo à esquerda */
+        gap: 8px; /* Espaço entre título e preço */
+    }
+
+    .servico-card p {
+        align-self: flex-end; /* Joga o preço para a direita embaixo */
+        font-size: 1.1rem;
+    }
+    
+    .servico-card > div:first-child {
+        padding-right: 0;
+        width: 100%;
+    }
+}
 .servico-card.selecionado { border-color: var(--dourado); box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); }
 input[type="date"] { width: 100%; padding: 18px; background: #000; border: 1px solid rgba(212, 175, 55, 0.2); color: white; border-radius: 12px; color-scheme: dark; }
 .grade-horarios { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
