@@ -251,26 +251,53 @@ async function carregarConfiguracoesAdmin() {
         document.getElementById('conf-intervalo').value = dados.intervaloMinutos;
         const containerServ = document.getElementById('lista-servicos-inputs');
         containerServ.innerHTML = '';
-        if (dados.servicos) dados.servicos.forEach(serv => adicionarCampoServico(serv.nome, serv.preco));
+        // Procure essa linha e deixe ela assim:
+if (dados.servicos) {
+    dados.servicos.forEach(serv => adicionarCampoServico(serv.nome, serv.preco, serv.categoria));
+}
     }
 }
 
-function adicionarCampoServico(nome="", preco="") {
+// Substitua a função antiga por esta:
+function adicionarCampoServico(nome="", preco="", categoria="servico") {
     const div = document.createElement('div');
     div.className = 'item-servico';
-    div.innerHTML = `<input type="text" placeholder="Serviço" value="${nome}" class="serv-nome" style="flex:1"><input type="text" placeholder="R$ 0,00" value="${preco}" class="serv-preco" style="width:100px"><button class="btn-remove">X</button>`;
+    
+    // Adicionamos um <select> para escolher entre Serviço ou Combo
+    div.innerHTML = `
+        <select class="serv-cat" style="width: 90px; background: #000; color: #D4AF37; border: 1px solid #333; border-radius: 8px;">
+            <option value="servico" ${categoria === 'servico' ? 'selected' : ''}>✂️ Serv.</option>
+            <option value="combo" ${categoria === 'combo' ? 'selected' : ''}>🔥 Combo</option>
+        </select>
+        <input type="text" placeholder="Nome" value="${nome}" class="serv-nome" style="flex:1">
+        <input type="text" placeholder="R$ 0,00" value="${preco}" class="serv-preco" style="width:80px">
+        <button class="btn-remove">X</button>
+    `;
+    
     div.querySelector('.btn-remove').onclick = () => div.remove();
     document.getElementById('lista-servicos-inputs').appendChild(div);
 }
 
+// Substitua a função antiga por esta:
 async function salvarConfiguracoes() {
     const btn = document.getElementById('btn-salvar-conf');
     btn.innerText = "SALVANDO...";
+    
     let servicos = [];
+    // O segredo está aqui: pegamos o valor do campo .serv-cat
     document.querySelectorAll('#lista-servicos-inputs > div').forEach((item, index) => {
         const n = item.querySelector('.serv-nome').value;
         const p = item.querySelector('.serv-preco').value;
-        if(n && p) servicos.push({ id: index, nome: n, preco: p });
+        const c = item.querySelector('.serv-cat').value; // Lendo a categoria
+        
+        if(n && p) {
+            servicos.push({ 
+                id: index, 
+                nome: n, 
+                preco: p, 
+                categoria: c // Salvando no Firebase
+            });
+        }
     });
     
     try {
@@ -281,8 +308,13 @@ async function salvarConfiguracoes() {
             intervaloMinutos: Number(document.getElementById('conf-intervalo').value), 
             servicos: servicos 
         }, { merge: true });
-        alert("Configurações atualizadas com sucesso!");
-    } catch (e) { alert("Erro ao salvar."); }
+        
+        alert("Configurações e Combos atualizados! ✅");
+        location.reload();
+    } catch (e) { 
+        console.error(e);
+        alert("Erro ao salvar."); 
+    }
     btn.innerText = "SALVAR TUDO";
 }
 
