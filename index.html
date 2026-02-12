@@ -57,67 +57,7 @@
     </div>
 
     <div id="toast-box" class="toast"></div>
-    <script type="module" src="js/client.js"></script>
-</body>
-</html><!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Barbearia Premium</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style-client.css">
-</head>
-<body>
-
-    <header>
-        <div class="logo-area">
-            <h1 id="nome-barbearia">Barbearia</h1>
-        </div>
-        <button id="btn-abrir-menu">☰</button>
-    </header>
-
-    <div id="sidebar" class="sidebar">
-        <div class="sidebar-header">
-            <h3>MENU</h3>
-            <button id="btn-fechar-menu">✕</button>
-        </div>
-        <nav>
-           <a href="#" id="btn-meus-agendamentos">📅 Meus Agendamentos</a>
-           <a href="admin.html">💼 Área do Parceiro</a>
-        </nav>
-    </div>
-    <div id="overlay" class="overlay"></div>
-
-    <div class="container" id="conteudo-principal">
-        <div class="section-title">SERVIÇOS</div>
-        <div id="lista-servicos"></div>
-
-        <div class="section-title">DATA</div>
-        <input type="date" id="data-agendamento">
-
-        <div class="section-title">HORÁRIOS</div>
-        <div class="grade-horarios" id="lista-horarios">
-            <p style="grid-column: span 4; text-align: center; color: #666; padding: 20px;">Selecione uma data</p>
-        </div>
-    </div>
     
-    <div class="fab-container">
-        <button id="btn-finalizar" class="btn-agendar">CONFIRMAR AGENDAMENTO</button>
-    </div>
-
-    <div class="modal" id="modal-cadastro">
-        <div class="modal-content">
-            <h2>FINALIZAR</h2>
-            <p>Informe seus dados para confirmar</p>
-            <input type="text" id="cliente-nome" placeholder="Seu Nome">
-            <input type="tel" id="cliente-zap" placeholder="Seu WhatsApp">
-            <button class="btn-confirmar" id="btn-confirma-agendamento">AGENDAR AGORA</button>
-            <button id="btn-cancelar-cadastro" class="btn-cancelar">Cancelar</button>
-        </div>
-    </div>
-
-    <div id="toast-box" class="toast"></div>
     <script type="module" src="js/client.js"></script>
 </body>
 </html>

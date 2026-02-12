@@ -1,5 +1,4 @@
-// js/client.js
-import { db, ID_LOJA, IMAGEM_PADRAO } from "./config.js";
+import { db, ID_LOJA } from "./config.js";
 import { collection, getDocs, addDoc, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 let servicoSelecionado = null;
@@ -7,17 +6,20 @@ let horarioSelecionado = null;
 let LOJA_CONFIG = null;
 
 window.onload = async function() {
-    if (!ID_LOJA) return alert("Erro: ID da loja faltando.");
+    // Verifica se o ID da loja existe na URL (?loja=barbearia)
+    if (!ID_LOJA) {
+        alert("Erro: Link sem ID da loja. Use ?loja=nome-da-loja");
+        return;
+    }
 
     try {
-        // BUSCA A LOJA (Coleção: lojas)
+        // CORREÇÃO: Coleção "lojas" em minúsculo
         const docSnap = await getDoc(doc(db, "lojas", ID_LOJA));
 
         if (docSnap.exists()) {
             LOJA_CONFIG = docSnap.data();
             document.getElementById('nome-barbearia').innerText = LOJA_CONFIG.nome;
             
-            // Fundo
             if(LOJA_CONFIG.fotoFundo) {
                 document.documentElement.style.setProperty('--bg-loja', `url('${LOJA_CONFIG.fotoFundo}')`);
             }
@@ -29,10 +31,10 @@ window.onload = async function() {
             elData.addEventListener('change', carregarHorarios);
 
         } else {
-            alert("Loja não encontrada no Firebase. Verifique o ID.");
+            alert("Loja não encontrada! Verifique o ID no Firebase.");
         }
     } catch (e) {
-        console.error("Erro ao carregar:", e);
+        console.error("Erro ao carregar loja:", e);
     }
     
     configurarCliques();
@@ -47,7 +49,7 @@ function configurarCliques() {
         if(servicoSelecionado && horarioSelecionado) {
             document.getElementById('modal-cadastro').classList.add('aberto');
         } else {
-            alert("Selecione serviço e horário!");
+            alert("Selecione o serviço e o horário primeiro!");
         }
     };
 
@@ -66,6 +68,8 @@ function toggleMenu() {
 function renderizarServicos() {
     const div = document.getElementById('lista-servicos');
     div.innerHTML = "";
+    if(!LOJA_CONFIG.servicos) return;
+
     LOJA_CONFIG.servicos.forEach(serv => {
         const el = document.createElement('div');
         el.className = 'servico-card';
@@ -83,14 +87,13 @@ function renderizarServicos() {
 async function carregarHorarios() {
     const data = document.getElementById('data-agendamento').value;
     const div = document.getElementById('lista-horarios');
-    div.innerHTML = "Buscando...";
+    div.innerHTML = "<p style='grid-column: span 4; text-align:center;'>Buscando horários...</p>";
 
-    // BUSCA AGENDAMENTOS (Coleção: agendamentos dentro de lojas)
+    // CORREÇÃO: Coleção "lojas" em minúsculo
     const q = query(collection(db, "lojas", ID_LOJA, "agendamentos"), where("data", "==", data));
     const snap = await getDocs(q);
     const ocupados = snap.docs.map(d => d.data().horario);
 
-    // Gera lista visual
     div.innerHTML = "";
     let atual = LOJA_CONFIG.horarioInicio * 60;
     while(atual < LOJA_CONFIG.horarioFim * 60) {
@@ -124,18 +127,23 @@ function atualizarBotao() {
 async function finalizarAgendamento() {
     const nome = document.getElementById('cliente-nome').value;
     const zap = document.getElementById('cliente-zap').value;
-    if(!nome || !zap) return alert("Preencha tudo!");
+    if(!nome || !zap) return alert("Preencha seu nome e WhatsApp!");
 
     try {
+        // CORREÇÃO: Coleção "lojas" em minúsculo
         await addDoc(collection(db, "lojas", ID_LOJA, "agendamentos"), {
             cliente_nome: nome,
             cliente_zap: zap,
             data: document.getElementById('data-agendamento').value,
             horario: horarioSelecionado,
             servico: servicoSelecionado.nome,
-            preco: servicoSelecionado.preco
+            preco: servicoSelecionado.preco,
+            criadoEm: new Date()
         });
-        alert("Agendado com sucesso!");
+        alert("Agendado com sucesso! ✅");
         location.reload();
-    } catch(e) { alert("Erro ao agendar."); }
+    } catch(e) { 
+        console.error(e);
+        alert("Erro ao realizar agendamento."); 
+    }
 }
