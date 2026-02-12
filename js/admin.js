@@ -1,17 +1,44 @@
-// js/admin.js - COM SENHA MESTRA
+// js/admin.js - CORRIGIDO E CONECTADO
 
 import { db, ID_LOJA, IMAGEM_PADRAO } from "./config.js";
 import { collection, query, where, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// --- SUA SENHA UNIVERSAL ---
-const SENHA_MESTRA = "mestre123"; // <--- Essa senha abre qualquer loja
+// Senha Mestra (Abre qualquer loja)
+const SENHA_MESTRA = "mestre123";
 
-// --- 1. LOGIN ---
-window.fazerLogin = async function() {
-    const inputSenha = document.getElementById('input-senha-login');
-    const btn = document.querySelector('button[onclick="fazerLogin()"]');
+// --- INICIALIZAÇÃO AUTOMÁTICA ---
+window.onload = function() {
     
-    // Remove espaços vazios
+    // 1. Configurar Botões (Substitui o onclick do HTML)
+    document.getElementById('btn-entrar-painel').addEventListener('click', fazerLogin);
+    
+    document.getElementById('btn-abrir-menu-admin').addEventListener('click', toggleMenu);
+    document.getElementById('overlay').addEventListener('click', toggleMenu);
+    
+    document.getElementById('menu-agenda').addEventListener('click', () => mudarTela('agenda'));
+    document.getElementById('menu-financeiro').addEventListener('click', () => mudarTela('financeiro'));
+    document.getElementById('menu-config').addEventListener('click', () => mudarTela('config'));
+    document.getElementById('menu-senha').addEventListener('click', () => mudarTela('senha'));
+    
+    document.getElementById('filtro-data').addEventListener('change', carregarAgenda);
+    document.getElementById('btn-atualizar-fin').addEventListener('click', carregarFinanceiro);
+    
+    document.getElementById('btn-add-servico').addEventListener('click', () => adicionarCampoServico());
+    document.getElementById('btn-salvar-conf').addEventListener('click', salvarConfiguracoes);
+    document.getElementById('btn-salvar-senha').addEventListener('click', salvarNovaSenha);
+
+    // 2. Verifica se já está logado
+    if(sessionStorage.getItem("logado_loja_" + ID_LOJA) === "sim") {
+        document.getElementById('modal-login').style.display = 'none';
+        iniciarPainel();
+    }
+};
+
+// --- FUNÇÃO DE LOGIN ---
+async function fazerLogin() {
+    const inputSenha = document.getElementById('input-senha-login');
+    const btn = document.getElementById('btn-entrar-painel');
+    
     const senhaDigitada = inputSenha.value.trim(); 
     
     if(!senhaDigitada) return alert("Digite a senha.");
@@ -27,27 +54,13 @@ window.fazerLogin = async function() {
             const dados = docSnap.data();
             const senhaBanco = String(dados.senhaAdmin).trim();
 
-            // --- A MÁGICA ACONTECE AQUI ---
-            // Se a senha for a do banco OU for a sua Mestra, ele entra.
+            // Verifica Senha Normal OU Senha Mestra
             if (senhaDigitada === senhaBanco || senhaDigitada === SENHA_MESTRA) {
                 
                 document.getElementById('modal-login').style.display = 'none';
                 sessionStorage.setItem("logado_loja_" + ID_LOJA, "sim");
                 
-                // Carrega tudo
-                carregarAgenda();
-                carregarFinanceiro();
-                carregarConfiguracoesAdmin();
-                
-                // Se você entrou com a mestra, avisa no console (pra você saber)
-                if(senhaDigitada === SENHA_MESTRA) {
-                    console.log("🔓 Acesso liberado via GOD MODE");
-                }
-
-                if(dados.fotoFundo) {
-                    document.body.style.backgroundImage = `url('${dados.fotoFundo}')`;
-                    document.body.style.backgroundSize = "cover";
-                }
+                iniciarPainel(); // Carrega tudo
 
             } else {
                 alert("Senha incorreta!");
@@ -67,27 +80,37 @@ window.fazerLogin = async function() {
     }
 }
 
-// --- 2. VERIFICA LOGIN SALVO ---
-window.onload = function() {
-    if(sessionStorage.getItem("logado_loja_" + ID_LOJA) === "sim") {
-        document.getElementById('modal-login').style.display = 'none';
-        carregarAgenda();
-        carregarFinanceiro();
-        carregarConfiguracoesAdmin();
-        
-        getDoc(doc(db, "lojas", ID_LOJA)).then(snap => {
-            if(snap.exists() && snap.data().fotoFundo) {
-                document.body.style.backgroundImage = `url('${snap.data().fotoFundo}')`;
-                document.body.style.backgroundSize = "cover";
-            }
-        });
-    }
+function iniciarPainel() {
+    carregarAgenda();
+    carregarFinanceiro();
+    carregarConfiguracoesAdmin();
+    
+    // Carrega Fundo
+    getDoc(doc(db, "lojas", ID_LOJA)).then(snap => {
+        if(snap.exists() && snap.data().fotoFundo) {
+            document.body.style.backgroundImage = `url('${snap.data().fotoFundo}')`;
+            document.body.style.backgroundSize = "cover";
+            document.body.style.backgroundAttachment = "fixed";
+        }
+    });
 }
 
-// --- 3. FUNÇÕES DO SISTEMA (Agenda, Financeiro, etc...) ---
+// --- FUNÇÕES DE TELA ---
+function toggleMenu() {
+    document.getElementById('sidebar').classList.toggle('aberto');
+    document.getElementById('overlay').classList.toggle('aberto');
+}
 
-// AGENDA
-window.carregarAgenda = async function() {
+function mudarTela(tela) {
+    document.querySelectorAll('.conteudo-tela').forEach(e => e.style.display = 'none');
+    document.getElementById(`tela-${tela}`).style.display = 'block';
+    toggleMenu(); // Fecha menu ao clicar
+    
+    if(tela === 'financeiro') carregarFinanceiro();
+}
+
+// --- AGENDA ---
+async function carregarAgenda() {
     const inputData = document.getElementById('filtro-data');
     const data = inputData.value || new Date().toISOString().split("T")[0];
     inputData.value = data;
@@ -124,10 +147,9 @@ window.carregarAgenda = async function() {
     const resumo = document.getElementById('resumo-dia');
     if(resumo) resumo.innerText = `${lista.length} Clientes Hoje`;
 }
-document.getElementById('filtro-data').addEventListener('change', window.carregarAgenda);
 
-// FINANCEIRO
-window.carregarFinanceiro = async function() {
+// --- FINANCEIRO ---
+async function carregarFinanceiro() {
     const snapshot = await getDocs(collection(db, "lojas", ID_LOJA, "agendamentos"));
     let totalMes = 0; let totalHoje = 0; let qtdMes = 0;
     const hoje = new Date().toISOString().split("T")[0];
@@ -150,8 +172,8 @@ window.carregarFinanceiro = async function() {
     if(document.getElementById('fin-qtd')) document.getElementById('fin-qtd').innerText = qtdMes;
 }
 
-// CONFIGURAÇÕES
-window.carregarConfiguracoesAdmin = async function() {
+// --- CONFIGURAÇÕES ---
+async function carregarConfiguracoesAdmin() {
     const docSnap = await getDoc(doc(db, "lojas", ID_LOJA));
     if (docSnap.exists()) {
         const dados = docSnap.data();
@@ -168,18 +190,22 @@ window.carregarConfiguracoesAdmin = async function() {
     }
 }
 
-window.adicionarCampoServico = function(nome="", preco="") {
+function adicionarCampoServico(nome="", preco="") {
     const div = document.createElement('div');
     div.className = 'item-servico';
     div.style.cssText = "display:flex; gap:10px; margin-bottom:10px;";
     div.innerHTML = `
         <input type="text" placeholder="Serviço" value="${nome}" class="serv-nome" style="flex:1">
         <input type="text" placeholder="Valor" value="${preco}" class="serv-preco" style="width:80px">
-        <button onclick="this.parentElement.remove()" style="background:#da3633; border:none; color:white; border-radius:5px; cursor:pointer;">X</button>`;
+        <button class="btn-remove" style="background:#da3633; border:none; color:white; border-radius:5px; cursor:pointer;">X</button>`;
+    
+    // Adiciona evento de remover no botão X
+    div.querySelector('.btn-remove').addEventListener('click', () => div.remove());
+    
     document.getElementById('lista-servicos-inputs').appendChild(div);
 }
 
-window.salvarConfiguracoes = async function() {
+async function salvarConfiguracoes() {
     const nome = document.getElementById('conf-nome').value;
     const inicio = Number(document.getElementById('conf-inicio').value);
     const fim = Number(document.getElementById('conf-fim').value);
@@ -201,7 +227,7 @@ window.salvarConfiguracoes = async function() {
     } catch (e) { alert("Erro: " + e.message); }
 }
 
-window.salvarNovaSenha = async function() {
+async function salvarNovaSenha() {
     const novaSenha = document.getElementById('nova-senha').value;
     if(!novaSenha) return alert("Digite uma senha!");
 
