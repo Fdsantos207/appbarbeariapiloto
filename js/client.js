@@ -14,9 +14,18 @@ const modalCadastro = document.getElementById('modal-cadastro');
 // --- INICIALIZAÇÃO ---
 window.onload = async function() {
     console.log("Iniciando App para Loja ID:", ID_LOJA);
+    
+    // 1. LIGA OS BOTÕES PRIMEIRO (Assim o menu funciona sempre)
+    configurarBotoes();
 
+    // 2. VERIFICA O ID
     if (!ID_LOJA) {
-        alert("Erro Crítico: ID da loja não identificado.");
+        // Se não tiver ID, tenta usar 'barbearia' como padrão ou avisa
+        if(confirm("Link incorreto. Deseja ir para a barbearia padrão?")) {
+            window.location.href = window.location.pathname + "?loja=barbearia";
+        } else {
+            alert("Erro: Link sem ID da loja.");
+        }
         return;
     }
 
@@ -27,22 +36,22 @@ window.onload = async function() {
         if (docSnap.exists()) {
             LOJA_CONFIG = docSnap.data();
             
-            // Configurações da Loja
+            // Loja Bloqueada?
             if (LOJA_CONFIG.ativa === false) {
                 document.body.innerHTML = "<h1 style='color:white; padding:50px; text-align:center'>Loja Bloqueada</h1>";
                 return;
             }
 
+            // Sucesso: Preenche a tela
             document.getElementById('nome-barbearia').innerText = LOJA_CONFIG.nome;
             
-            // Background
+            // Fundo
             const bg = LOJA_CONFIG.fotoFundo || IMAGEM_PADRAO;
-            // Aplica no body via CSS inline ou variável
             document.body.style.backgroundImage = `url('${bg}')`;
             document.body.style.backgroundSize = "cover";
             document.body.style.backgroundAttachment = "fixed";
             
-            // Fundo escuro overlay
+            // Overlay escuro para ler melhor
             if(!document.getElementById('bg-overlay')) {
                 const ov = document.createElement('div');
                 ov.id = 'bg-overlay';
@@ -50,14 +59,11 @@ window.onload = async function() {
                 document.body.appendChild(ov);
             }
 
-            // Carregar Dados
             renderizarServicos();
             
-            // Data Mínima (Hoje)
             elData.min = new Date().toISOString().split("T")[0];
             elData.addEventListener('change', carregarHorarios);
 
-            // Carrega dados do cliente se já tiver
             const cliente = localStorage.getItem('cliente_barbearia');
             if(cliente) {
                 const c = JSON.parse(cliente);
@@ -66,51 +72,73 @@ window.onload = async function() {
             }
 
         } else {
-            alert("Loja não encontrada! Verifique o ID no link.");
+            // Se não achou a loja, avisa mas não mata o menu
+            document.getElementById('nome-barbearia').innerText = "Loja não encontrada";
+            alert(`A loja "${ID_LOJA}" não existe no banco de dados.\n\nUse o painel Dev.html para criá-la.`);
         }
     } catch (e) {
         console.error(e);
         alert("Erro de conexão: " + e.message);
     }
-    
-    configurarBotoes();
 };
 
-// --- CONFIGURAÇÃO DOS BOTÕES (MENU E MODAL) ---
+// --- CONFIGURAÇÃO DOS BOTÕES ---
 function configurarBotoes() {
     // Menu Hamburguer
-    document.getElementById('btn-abrir-menu').addEventListener('click', toggleMenu);
-    document.getElementById('btn-fechar-menu').addEventListener('click', toggleMenu);
-    document.getElementById('overlay').addEventListener('click', toggleMenu);
+    const btnAbrir = document.getElementById('btn-abrir-menu');
+    const btnFechar = document.getElementById('btn-fechar-menu');
+    const overlay = document.getElementById('overlay');
+
+    if(btnAbrir) btnAbrir.addEventListener('click', toggleMenu);
+    if(btnFechar) btnFechar.addEventListener('click', toggleMenu);
+    if(overlay) overlay.addEventListener('click', toggleMenu);
     
-    // Botão Agendar (Abre Modal)
-    document.getElementById('btn-finalizar').addEventListener('click', () => {
-        if(!servicoSelecionado || !horarioSelecionado || !elData.value) {
-            return mostrarToast("⚠️ Selecione Serviço, Data e Horário");
-        }
-        modalCadastro.style.display = 'flex';
-        setTimeout(() => modalCadastro.classList.add('aberto'), 10); // Animação
-    });
+    // Agendar
+    const btnFinalizar = document.getElementById('btn-finalizar');
+    if(btnFinalizar) {
+        btnFinalizar.addEventListener('click', () => {
+            if(!servicoSelecionado || !horarioSelecionado || !elData.value) {
+                return mostrarToast("⚠️ Selecione Serviço, Data e Horário");
+            }
+            modalCadastro.style.display = 'flex';
+            setTimeout(() => modalCadastro.classList.add('aberto'), 10);
+        });
+    }
 
-    // Botão Cancelar Modal
-    document.getElementById('btn-cancelar-cadastro').addEventListener('click', () => {
-        modalCadastro.classList.remove('aberto');
-        setTimeout(() => modalCadastro.style.display = 'none', 300);
-    });
+    // Cancelar Modal
+    const btnCancelar = document.getElementById('btn-cancelar-cadastro');
+    if(btnCancelar) {
+        btnCancelar.addEventListener('click', () => {
+            modalCadastro.classList.remove('aberto');
+            setTimeout(() => modalCadastro.style.display = 'none', 300);
+        });
+    }
 
-    // Botão Confirmar Final
-    document.getElementById('btn-confirma-agendamento').addEventListener('click', finalizarAgendamento);
+    // Confirmar
+    const btnConfirma = document.getElementById('btn-confirma-agendamento');
+    if(btnConfirma) btnConfirma.addEventListener('click', finalizarAgendamento);
 
-    // Botão Meus Agendamentos
-    document.getElementById('btn-meus-agendamentos').addEventListener('click', () => {
-        toggleMenu();
-        verMeusAgendamentos();
-    });
+    // Meus Agendamentos
+    const btnMeus = document.getElementById('btn-meus-agendamentos'); // Se for 'a' tag, use o ID correto do HTML
+    // No seu HTML anterior era 'link-meus-agendamentos' ou algo assim. 
+    // Vou garantir pegando pelo seletor de navegação se o ID falhar
+    if(btnMeus) {
+        btnMeus.addEventListener('click', () => {
+            toggleMenu();
+            verMeusAgendamentos();
+        });
+    } else {
+        // Fallback se o ID mudou
+        const links = document.querySelectorAll('nav a');
+        if(links[0]) links[0].addEventListener('click', () => { toggleMenu(); verMeusAgendamentos(); });
+    }
 }
 
 function toggleMenu() {
-    document.getElementById('sidebar').classList.toggle('aberto');
-    document.getElementById('overlay').classList.toggle('aberto');
+    const sb = document.getElementById('sidebar');
+    const ov = document.getElementById('overlay');
+    if(sb) sb.classList.toggle('aberto');
+    if(ov) ov.classList.toggle('aberto');
 }
 
 // --- FUNÇÕES DE LÓGICA ---
@@ -144,7 +172,6 @@ async function carregarHorarios() {
     horarioSelecionado = null;
     atualizarStatusBotao();
 
-    // Gera horários
     let horarios = [];
     let atual = LOJA_CONFIG.horarioInicio * 60;
     const fim = LOJA_CONFIG.horarioFim * 60;
@@ -156,7 +183,6 @@ async function carregarHorarios() {
         atual += LOJA_CONFIG.intervaloMinutos;
     }
 
-    // Busca Ocupados
     const q = query(collection(db, "lojas", ID_LOJA, "agendamentos"), where("data", "==", data));
     const snap = await getDocs(q);
     const ocupados = snap.docs.map(d => d.data().horario);
@@ -216,7 +242,7 @@ async function finalizarAgendamento() {
         localStorage.setItem('cliente_barbearia', JSON.stringify({ nome, zap }));
         
         modalCadastro.classList.remove('aberto');
-        modalCadastro.style.display = 'none';
+        setTimeout(() => modalCadastro.style.display = 'none', 300);
         
         mostrarToast("✅ Agendamento Confirmado!");
         
