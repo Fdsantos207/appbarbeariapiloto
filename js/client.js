@@ -11,23 +11,26 @@ window.onload = async function() {
     try {
         // Busca os dados da barbearia no banco (coleção 'lojas' em minúsculo)
         const docSnap = await getDoc(doc(db, "lojas", ID_LOJA)); 
-        if (docSnap.exists()) {
-            LOJA_CONFIG = docSnap.data();
-            document.getElementById('nome-barbearia').innerText = LOJA_CONFIG.nome;
-            
-            // Desenha a lista de serviços pela primeira vez
-            renderizarServicos();
-            
-            // Configura o calendário de datas
-            const elData = document.getElementById('data-agendamento');
-            elData.min = new Date().toISOString().split("T")[0];
-            elData.addEventListener('change', carregarHorarios);
-        } else {
-            alert("Erro: Loja não encontrada.");
-        }
-    } catch (e) { console.error("Erro ao carregar:", e); }
+        // Procure a parte que carrega os dados e deixe assim:
+if (docSnap.exists()) {
+    LOJA_CONFIG = docSnap.data();
     
-    configurarCliques();
+    // --- LÓGICA DA LOGOMARCA ---
+    const elTexto = document.getElementById('nome-barbearia');
+    const elLogo = document.getElementById('img-logo-barbearia');
+    
+    // Verifica se a loja tem um link de foto salvo no banco
+    if (LOJA_CONFIG.logoUrl && LOJA_CONFIG.logoUrl.trim() !== "") {
+        elLogo.src = LOJA_CONFIG.logoUrl;
+        elLogo.style.display = 'block'; // Mostra a imagem
+        elTexto.style.display = 'none'; // Esconde o texto
+    } else {
+        elTexto.innerText = LOJA_CONFIG.nome; // Mantém só o texto
+    }
+    // ---------------------------
+
+    renderizarServicos();
+    // ... restante do código ...
 };
 
 // --- CONFIGURAÇÃO DE TODOS OS CLIQUES ---
