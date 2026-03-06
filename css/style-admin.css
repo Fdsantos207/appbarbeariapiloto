@@ -13,30 +13,28 @@
 body {
     background-color: var(--cor-fundo);
     color: var(--texto-principal);
-    overflow-x: hidden; /* Evita barra de rolagem lateral */
+    overflow-x: hidden;
 }
 
-/* --- ESTRUTURA DE LAYOUT (O QUE CORRIGE A FOTO) --- */
-
-/* O Container principal agora centraliza e dá o respiro necessário */
+/* --- ESTRUTURA DE LAYOUT --- */
 .container-principal {
     width: 100%;
     max-width: 600px;
     margin: 0 auto;
     padding: 20px;
-    padding-bottom: 100px; /* Espaço para não cobrir o conteúdo */
+    padding-bottom: 100px;
 }
 
-/* Sidebar Fixa: Para ela NÃO empurrar o conteúdo para o lado */
+/* CORREÇÃO DO MENU (TRANSPARÊNCIA E DESFOQUE) */
 .sidebar {
     position: fixed; 
     top: 0; 
     left: -280px; 
     width: 280px; 
     height: 100%;
-    background: rgba(15,15,15,0.98); 
-    backdrop-filter: blur(20px); 
-    z-index: 5000; /* Garante que fica acima de tudo */
+    background: rgba(15, 15, 15, 0.9); /* Ajustado para transparência */
+    backdrop-filter: blur(15px); /* Efeito de vidro */
+    z-index: 5000;
     transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     padding: 30px;
     border-right: 1px solid rgba(212, 175, 55, 0.2);
@@ -44,14 +42,69 @@ body {
 
 .sidebar.aberto { left: 0; box-shadow: 10px 0 50px rgba(0,0,0,0.9); }
 
+.menu-item {
+    display: block;
+    padding: 15px;
+    color: #ccc;
+    text-decoration: none;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    transition: 0.3s;
+}
+
+.menu-item.ativo {
+    background: rgba(212, 175, 55, 0.1);
+    color: var(--cor-dourado-solido);
+    border: 1px solid var(--cor-dourado-solido);
+}
+
 .overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.8); z-index: 4000; display: none; backdrop-filter: blur(5px);
 }
 .overlay.aberto { display: block; }
 
-/* --- CARDS E ELEMENTOS --- */
+/* --- FINANCEIRO (CORREÇÃO DOS CARDS) --- */
+.grid-financeiro {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 25px;
+}
 
+.card-fin {
+    background: rgba(30, 30, 30, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 15px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+}
+
+.card-fin h3 {
+    font-size: 0.75rem;
+    color: #999;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.card-fin .valor {
+    font-size: 1.3rem;
+    color: #fff;
+    font-weight: 800;
+}
+
+.card-fin.destaque {
+    grid-column: span 2;
+    background: var(--gradiente-dourado);
+    border: none;
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+}
+
+.card-fin.destaque h3 { color: #222; font-weight: 700; }
+.card-fin.destaque .valor { color: #000; }
+
+/* --- DEMAIS ELEMENTOS --- */
 .card-admin {
     background: var(--cor-fundo-card);
     border: 1px solid rgba(212, 175, 55, 0.2);
@@ -71,8 +124,6 @@ body {
     padding-bottom: 10px;
 }
 
-/* --- INPUTS PREMIUM --- */
-
 input, select {
     width: 100%; 
     padding: 14px; 
@@ -84,15 +135,11 @@ input, select {
     font-size: 1rem;
 }
 
-input:focus { border-color: var(--cor-dourado-solido); outline: none; }
-
 .grid-inputs-3 {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 12px;
 }
-
-/* --- BOTÕES --- */
 
 .btn-salvar-master {
     width: 100%;
@@ -105,7 +152,6 @@ input:focus { border-color: var(--cor-dourado-solido); outline: none; }
     font-size: 1rem;
     text-transform: uppercase;
     cursor: pointer;
-    box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
 }
 
 .btn-acao-secundaria {
@@ -116,10 +162,8 @@ input:focus { border-color: var(--cor-dourado-solido); outline: none; }
     color: var(--cor-dourado-solido);
     border-radius: 10px;
     font-weight: bold;
-    cursor: pointer;
 }
 
-/* Modal de Login */
 #modal-login {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: #000; z-index: 9999;
@@ -132,7 +176,6 @@ input:focus { border-color: var(--cor-dourado-solido); outline: none; }
     border: 1px solid var(--cor-dourado-solido);
 }
 
-/* Ajuste Mobile */
 @media (max-width: 450px) {
     .grid-inputs-3 { grid-template-columns: 1fr; }
 }
