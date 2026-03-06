@@ -5,29 +5,56 @@ import { collection, getDocs, addDoc, query, where, doc, getDoc } from "https://
 let servicoSelecionado = null;
 let horarioSelecionado = null;
 let LOJA_CONFIG = null;
-let categoriaAtual = "servico"; // Começa mostrando os serviços normais
+let categoriaAtual = "servico"; 
+let gatilhoInstalacao = null; // Para o botão de instalar
 
-// ATIVAÇÃO DO PWA
+// --- ATIVAÇÃO DO SERVICE WORKER (PWA) ---
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('PWA ativado com sucesso!', reg.scope))
-            .catch(err => console.log('Erro no PWA:', err));
+            .then(reg => console.log('PWA ativado!', reg.scope))
+            .catch(err => console.log('Erro PWA:', err));
     });
 }
 
+// Escuta o evento de instalação para mostrar o seu botão dourado
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    gatilhoInstalacao = e;
+    const container = document.getElementById('container-instalacao');
+    if (container) container.style.display = 'block';
+});
+
 window.onload = async function() {
     try {
-        // Busca os dados da barbearia no banco (coleção 'lojas' em minúsculo)
         const docSnap = await getDoc(doc(db, "lojas", ID_LOJA)); 
         if (docSnap.exists()) {
             LOJA_CONFIG = docSnap.data();
-            document.getElementById('nome-barbearia').innerText = LOJA_CONFIG.nome;
             
-            // Desenha a lista de serviços pela primeira vez
+            // --- LOGOMARCA OU TEXTO ---
+            const elTexto = document.getElementById('nome-barbearia');
+            const elLogo = document.getElementById('img-logo-barbearia');
+            if (LOJA_CONFIG.logoUrl) {
+                elLogo.src = LOJA_CONFIG.logoUrl;
+                elLogo.style.display = 'block';
+                elTexto.style.display = 'none';
+            } else {
+                elTexto.innerText = LOJA_CONFIG.nome;
+            }
+
+            // --- CONFIGURAÇÃO DO GPS ---
+            if (LOJA_CONFIG.endereco) {
+                const btnGPS = document.getElementById('btn-como-chegar');
+                btnGPS.style.display = 'block';
+                btnGPS.onclick = (e) => {
+                    e.preventDefault();
+                    const endereco = encodeURIComponent(LOJA_CONFIG.endereco);
+                    window.open(`https://www.google.com/maps/search/?api=1&query=${endereco}`, '_blank');
+                };
+            }
+            
             renderizarServicos();
             
-            // Configura o calendário de datas
             const elData = document.getElementById('data-agendamento');
             elData.min = new Date().toISOString().split("T")[0];
             elData.addEventListener('change', carregarHorarios);
@@ -39,18 +66,29 @@ window.onload = async function() {
     configurarCliques();
 };
 
-// --- CONFIGURAÇÃO DE TODOS OS CLIQUES ---
 function configurarCliques() {
     // Menu lateral
     document.getElementById('btn-abrir-menu').onclick = toggleMenu;
     document.getElementById('btn-fechar-menu').onclick = toggleMenu;
     document.getElementById('overlay').onclick = toggleMenu;
 
-    // CLIQUES NAS NOVAS ABAS (SERVIÇOS E COMBOS)
+    // Abas
     document.getElementById('tab-servicos').onclick = () => alternarCategoria("servico");
     document.getElementById('tab-combos').onclick = () => alternarCategoria("combo");
 
-    // Histórico e Finalização
+    // Instalação do App
+    const btnInstalar = document.getElementById('btn-instalar-app');
+    if (btnInstalar) {
+        btnInstalar.onclick = async () => {
+            if (!gatilhoInstalacao) return;
+            gatilhoInstalacao.prompt();
+            const { outcome } = await gatilhoInstalacao.userChoice;
+            if (outcome === 'accepted') document.getElementById('container-instalacao').style.display = 'none';
+            gatilhoInstalacao = null;
+        };
+    }
+
+    // Finalização
     document.getElementById('btn-meus-agendamentos').onclick = (e) => { e.preventDefault(); toggleMenu(); verMeusAgendamentos(); };
     document.getElementById('btn-finalizar').onclick = () => {
         if(servicoSelecionado && horarioSelecionado) document.getElementById('modal-cadastro').classList.add('aberto');
@@ -60,29 +98,20 @@ function configurarCliques() {
     document.getElementById('btn-confirma-agendamento').onclick = finalizarAgendamento;
 }
 
-// --- FUNÇÃO QUE TROCA ENTRE SERVIÇOS E COMBOS ---
 function alternarCategoria(novaCategoria) {
     categoriaAtual = novaCategoria;
-    
-    // Muda o visual dos botões (qual fica dourado)
     document.getElementById('tab-servicos').classList.toggle('ativo', novaCategoria === "servico");
     document.getElementById('tab-combos').classList.toggle('ativo', novaCategoria === "combo");
-    
-    // Limpa a seleção atual para não agendar errado
     servicoSelecionado = null;
     document.getElementById('btn-finalizar').classList.remove('ativo');
-    
-    // Atualiza a lista na tela
     renderizarServicos(); 
 }
 
-// --- DESENHA OS SERVIÇOS NA TELA ---
 function renderizarServicos() {
     const div = document.getElementById('lista-servicos');
     div.innerHTML = "";
     if(!LOJA_CONFIG.servicos) return;
 
-    // FILTRO: Mostra apenas o que é da aba clicada
     const itensFiltrados = LOJA_CONFIG.servicos.filter(s => {
         return s.categoria === categoriaAtual || (!s.categoria && categoriaAtual === "servico");
     });
@@ -94,10 +123,8 @@ function renderizarServicos() {
 
     itensFiltrados.forEach(serv => {
         const el = document.createElement('div');
-        el.className = 'servico-card'; // Segue o padrão visual premium
-        
+        el.className = 'servico-card';
         const icone = categoriaAtual === "combo" ? "🔥 " : "✂️ ";
-        
         el.innerHTML = `
             <div>
                 <h3>${icone}${serv.nome}</h3>
@@ -105,7 +132,6 @@ function renderizarServicos() {
             </div>
             <p>${serv.preco}</p>
         `;
-        
         el.onclick = () => {
             document.querySelectorAll('.servico-card').forEach(c => c.classList.remove('selecionado'));
             el.classList.add('selecionado');
@@ -116,7 +142,6 @@ function renderizarServicos() {
     });
 }
 
-// --- MANTÉM AS OUTRAS FUNÇÕES IGUAIS ---
 function toggleMenu() {
     document.getElementById('sidebar').classList.toggle('aberto');
     document.getElementById('overlay').classList.toggle('aberto');
@@ -157,11 +182,19 @@ async function finalizarAgendamento() {
     const nome = document.getElementById('cliente-nome').value;
     const zap = document.getElementById('cliente-zap').value;
     if(!nome || !zap) return alert("Preencha seu nome e zap!");
+    
+    // --- LÓGICA DE WHATSAPP (CONFIRMAÇÃO) ---
+    const msg = `Olá! Acabei de agendar:\n✂️ ${servicoSelecionado.nome}\n📅 ${document.getElementById('data-agendamento').value}\n⏰ ${horarioSelecionado}`;
+    const zapLink = `https://wa.me/55${zap}?text=${encodeURIComponent(msg)}`;
+
     await addDoc(collection(db, "lojas", ID_LOJA, "agendamentos"), {
         cliente_nome: nome, cliente_zap: zap, data: document.getElementById('data-agendamento').value,
         horario: horarioSelecionado, servico: servicoSelecionado.nome, preco: servicoSelecionado.preco
     });
-    alert("Agendado com sucesso! ✅"); location.reload();
+    
+    alert("Agendado com sucesso! ✅ Redirecionando para o WhatsApp...");
+    window.open(zapLink, '_blank');
+    location.reload();
 }
 
 async function verMeusAgendamentos() {

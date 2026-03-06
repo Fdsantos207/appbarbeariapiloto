@@ -6,20 +6,37 @@
     <title>Barbearia Premium</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style-client.css">
+    
     <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#D4AF37">
-<link rel="apple-touch-icon" href="img/icone-192.png">
+    <meta name="theme-color" content="#D4AF37">
+    <link rel="apple-touch-icon" href="img/icone-192.png">
 </head>
 <body>
 
-<header>
-    <div class="logo-area" style="display: flex; align-items: center;">
-        <img id="img-logo-barbearia" src="" alt="Logo" style="display: none; max-height: 45px; border-radius: 8px;">
-        
-        <h1 id="nome-barbearia">Barbearia</h1>
+    <div id="container-instalacao" style="display: none; padding: 15px; text-align: center; background: rgba(212, 175, 55, 0.1); border-bottom: 1px solid #D4AF37; z-index: 9999; position: relative;">
+        <p style="color: #fff; font-size: 0.85rem; margin-bottom: 10px;">Acesse mais rápido instalando nosso App!</p>
+        <button id="btn-instalar-app" style="
+            background: linear-gradient(135deg, #D4AF37 0%, #fcf6ba 50%, #d4af37 100%);
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);">
+            📲 INSTALAR APLICATIVO
+        </button>
     </div>
-    <button id="btn-abrir-menu">☰</button>
-</header>
+
+    <header>
+        <div class="logo-area" style="display: flex; align-items: center;">
+            <img id="img-logo-barbearia" src="" alt="Logo" style="display: none; max-height: 45px; border-radius: 8px;">
+            <h1 id="nome-barbearia">Barbearia</h1>
+        </div>
+        <button id="btn-abrir-menu">☰</button>
+    </header>
 
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
@@ -27,22 +44,24 @@
             <button id="btn-fechar-menu">✕</button>
         </div>
         <nav>
-           <a href="#" id="btn-meus-agendamentos">📅 Meus Agendamentos</a>
-           <a href="admin.html">💼 Área do Parceiro</a>
+            <a href="#" id="btn-meus-agendamentos">📅 Meus Agendamentos</a>
+            <a href="#" id="btn-como-chegar" style="display: none;">📍 Como Chegar</a>
+            <a href="admin.html">💼 Área do Parceiro</a>
         </nav>
     </div>
+    
     <div id="overlay" class="overlay"></div>
 
     <div class="container">
         <div class="section-title">O QUE VAMOS FAZER HOJE?</div>
+        <div class="tabs-categorias">
+            <button class="tab-btn ativo" id="tab-servicos">SERVIÇOS</button>
+            <button class="tab-btn" id="tab-combos">COMBOS 🔥</button>
+        </div>
 
-<div class="tabs-categorias">
-    <button class="tab-btn ativo" id="tab-servicos">SERVIÇOS</button>
-    <button class="tab-btn" id="tab-combos">COMBOS 🔥</button>
-</div>
+        <div id="lista-servicos">
+            </div>
 
-<div id="lista-servicos">
-    </div>
         <div class="section-title">DATA</div>
         <input type="date" id="data-agendamento">
 
@@ -68,6 +87,7 @@
     </div>
 
     <div id="toast-box" class="toast"></div>
+    
     <script type="module" src="js/client.js"></script>
 </body>
 </html>
