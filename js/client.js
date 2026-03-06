@@ -7,6 +7,15 @@ let horarioSelecionado = null;
 let LOJA_CONFIG = null;
 let categoriaAtual = "servico"; // Começa mostrando os serviços normais
 
+// ATIVAÇÃO DO PWA
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('PWA ativado com sucesso!', reg.scope))
+            .catch(err => console.log('Erro no PWA:', err));
+    });
+}
+
 window.onload = async function() {
     try {
         // Busca os dados da barbearia no banco (coleção 'lojas' em minúsculo)
