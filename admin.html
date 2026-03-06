@@ -8,85 +8,106 @@
 </head>
 <body>
     <div id="modal-login">
-        <div class="login-box">
+        <div class="login-box" style="position: relative;">
+            <div id="btn-secreto-dev" style="position: absolute; top: 0; right: 0; width: 45px; height: 45px; opacity: 0; z-index: 999;"></div>
+            
             <h2 style="color:#D4AF37; margin-bottom:20px;">Área Restrita</h2>
             <p style="color:#888; margin-bottom:15px;">Digite sua senha</p>
             <input type="password" id="input-senha-login" placeholder="Senha">
-            <button id="btn-entrar-painel" style="width:100%; padding:12px; background:#D4AF37; border:none; font-weight:bold; cursor:pointer;">ENTRAR</button>
-            <a href="index.html" style="display:block; margin-top:15px; color:#666; font-size:0.8rem;">← Voltar ao App</a>
+            <button id="btn-entrar-painel" style="width:100%; padding:12px; background:#D4AF37; border:none; font-weight:bold; cursor:pointer; border-radius: 8px;">ENTRAR</button>
+            <a href="index.html" style="display:block; margin-top:15px; color:#666; font-size:0.8rem; text-decoration:none;">← Voltar ao App</a>
         </div>
     </div>
 
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+    <header class="admin-header" style="display:flex; justify-content:space-between; align-items:center; padding: 15px; background: #111; border-bottom: 1px solid #333;">
         <button id="btn-abrir-menu-admin" style="background:none; border:none; color:#D4AF37; font-size:1.8rem; cursor:pointer;">☰</button>
-        <h2 style="color:#D4AF37; font-size:1.2rem;">Painel Gerencial</h2>
-        <div></div>
-    </div>
+        <h2 style="color:#D4AF37; font-size:1.1rem; letter-spacing: 1px;">PAINEL GERENCIAL</h2>
+        <div style="width: 30px;"></div>
+    </header>
 
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
-        <h3 style="color:#D4AF37; margin-bottom:30px;">MENU</h3> <button id="btn-fechar-menu">✕</button>
-    </div>
+            <h3 style="color:#D4AF37; cursor: pointer;">MENU</h3> 
+            <button id="btn-fechar-menu">✕</button>
+        </div>
         <div class="menu-item ativo" id="menu-agenda">📅 Agenda</div>
         <div class="menu-item" id="menu-financeiro">💰 Financeiro</div> 
         <div class="menu-item" id="menu-config">⚙️ Configurações</div>
         <div class="menu-item" id="menu-senha">🔒 Alterar Senha</div>
-        <a href="index.html" class="menu-item" style="color:#d9534f; border:1px solid #d9534f; margin-top:20px; text-align:center;">⬅ Voltar ao App</a>
+        <a href="index.html" class="menu-item" style="color:#d9534f; border:1px solid #d9534f; margin: 40px 15px 0; text-align:center; border-radius: 8px;">⬅ Sair do Painel</a>
     </div>
     <div id="overlay" class="overlay"></div>
 
-    <div id="tela-agenda" class="conteudo-tela">
-        <div class="painel-controle">
-            <input type="date" id="filtro-data">
-            <p id="resumo-dia" style="text-align:center; font-weight:bold;"></p>
-        </div>
+    <div class="container-principal" style="padding: 15px;">
+        
         <div id="tela-agenda" class="conteudo-tela">
-    <div class="form-group">
-        <label>Selecione a Data</label>
-        <input type="date" id="filtro-data">
-        
-        <button id="btn-bloquear-modal" style="width:100%; padding:15px; background:#1a1a1a; border:1px solid #D4AF37; color:#D4AF37; border-radius:12px; font-weight:bold; cursor:pointer; margin-top:10px;">🚫 BLOQUEAR UM HORÁRIO</button>
-        
-        <p id="resumo-dia" style="text-align:center; font-weight:bold; margin-top:15px; color:#888;">Carregando agenda...</p>
-    </div>
-    <div id="container-lista"></div>
-</div>
-        <div id="container-lista"></div>
+            <div class="card-admin">
+                <label style="color:#D4AF37; font-weight: bold; display: block; margin-bottom: 10px;">Filtrar por Data</label>
+                <input type="date" id="filtro-data" style="width: 100%; margin-bottom: 15px;">
+                <button id="btn-bloquear-modal" class="btn-acao-secundaria">🚫 BLOQUEAR HORÁRIO</button>
+                <p id="resumo-dia" style="text-align:center; font-weight:bold; margin-top:15px; color:#888;">Carregando agenda...</p>
+            </div>
+            <div id="container-lista" style="margin-top: 20px;"></div>
+        </div>
+
+        <div id="tela-financeiro" class="conteudo-tela" style="display:none;">
+            <div class="grid-financeiro">
+                <div class="card-fin destaque"><h3>Faturamento Mês</h3><span class="valor" id="fin-mes">R$ 0,00</span></div>
+                <div class="card-fin"><h3>Hoje</h3><span class="valor" id="fin-hoje">R$ 0,00</span></div>
+                <div class="card-fin"><h3>Cortes (Mês)</h3><span class="valor" id="fin-qtd">0</span></div>
+            </div>
+            <button id="btn-atualizar-fin" class="btn-acao-secundaria" style="margin-top: 20px;">🔄 ATUALIZAR DADOS</button>
+        </div>
+
+        <div id="tela-config" class="conteudo-tela" style="display:none;">
+            
+            <div class="card-admin">
+                <h3 class="titulo-card">📍 Dados da Barbearia</h3>
+                <div class="form-group">
+                    <label>Nome Comercial</label>
+                    <input type="text" id="conf-nome" placeholder="Ex: Barbearia Novo Stylus">
+                </div>
+                <div class="form-group">
+                    <label>Endereço Completo (Para o GPS)</label>
+                    <input type="text" id="conf-endereco" placeholder="Rua, Número, Bairro - Cidade">
+                </div>
+                <div class="form-group">
+                    <label>Link da Logomarca (URL)</label>
+                    <input type="text" id="conf-logo" placeholder="https://link-da-imagem.png">
+                </div>
+            </div>
+
+            <div class="card-admin">
+                <h3 class="titulo-card">⏰ Horários de Funcionamento</h3>
+                <div class="grid-inputs-3">
+                    <div class="form-group"><label>Abre</label><input type="number" id="conf-inicio" placeholder="09"></div>
+                    <div class="form-group"><label>Fecha</label><input type="number" id="conf-fim" placeholder="19"></div>
+                    <div class="form-group"><label>Intervalo</label><input type="number" id="conf-intervalo" placeholder="30"></div>
+                </div>
+            </div>
+
+            <div class="card-admin">
+                <h3 class="titulo-card">✂️ Serviços e Combos</h3>
+                <p style="font-size: 0.75rem; color: #666; margin-bottom: 15px;">Ao lado do preço, selecione se é um serviço comum ou um Combo 🔥</p>
+                <div id="lista-servicos-inputs"></div>
+                <button id="btn-add-servico" class="btn-acao-secundaria" style="margin-top: 15px;">+ NOVO SERVIÇO</button>
+            </div>
+
+            <button id="btn-salvar-conf" class="btn-salvar-master">SALVAR TODAS AS ALTERAÇÕES</button>
+        </div>
+
+        <div id="tela-senha" class="conteudo-tela" style="display:none;">
+            <div class="card-admin">
+                <h3 class="titulo-card">🔒 Segurança</h3>
+                <div class="form-group">
+                    <label>Nova Senha de Acesso</label>
+                    <input type="text" id="nova-senha" placeholder="Digite a nova senha">
+                </div>
+                <button id="btn-salvar-senha" class="btn-salvar-master">ATUALIZAR SENHA AGORA</button>
+            </div>
+        </div>
     </div>
 
-    <div id="tela-financeiro" class="conteudo-tela" style="display:none;">
-        <h3 style="margin-bottom:15px; color:white;">Resumo Financeiro</h3>
-        <div class="grid-financeiro">
-            <div class="card-fin destaque"><h3>Faturamento Mês</h3><span class="valor" id="fin-mes">R$ 0,00</span></div>
-            <div class="card-fin"><h3>Hoje</h3><span class="valor" id="fin-hoje">R$ 0,00</span></div>
-            <div class="card-fin"><h3>Cortes (Mês)</h3><span class="valor" id="fin-qtd">0</span></div>
-        </div>
-        <button id="btn-atualizar-fin" style="width:100%; padding:15px; background:#333; color:white; border-radius:8px; cursor:pointer;">🔄 Atualizar</button>
-    </div>
-
-    <div id="tela-config" class="conteudo-tela" style="display:none;">
-        <div class="form-group"><label>Nome</label> <input type="text" id="conf-nome"></div>
-        <div class="form-group">
-            <label>Horários</label>
-            <input type="number" id="conf-inicio" placeholder="Abre">
-            <input type="number" id="conf-fim" placeholder="Fecha">
-            <input type="number" id="conf-intervalo" placeholder="Minutos">
-        </div>
-        <div class="form-group">
-            <label>Serviços</label>
-            <div id="lista-servicos-inputs"></div>
-            <button id="btn-add-servico" style="margin-top:10px; width:100%; padding:10px; background:#333; color:white; border:none;">+ Serviço</button>
-        </div>
-        <button id="btn-salvar-conf" class="btn-salvar">SALVAR TUDO</button>
-    </div>
-
-    <div id="tela-senha" class="conteudo-tela" style="display:none;">
-        <div class="form-group">
-            <h3 style="color:white; margin-bottom:15px;">Nova Senha</h3>
-            <input type="text" id="nova-senha" placeholder="Digite a nova senha">
-            <button id="btn-salvar-senha" class="btn-salvar">ATUALIZAR SENHA</button>
-        </div>
-    </div>
     <script type="module" src="js/admin.js"></script>
 </body>
 </html>
