@@ -1,16 +1,59 @@
-/* --- NOVAS REGRAS PARA O PAINEL ORGANIZADO --- */
-
-/* Container que envolve todas as telas para dar respiro */
-.container-principal {
-    max-width: 600px;
-    margin: 0 auto;
-    padding-bottom: 40px;
+/* --- BASE E CORES --- */
+:root {
+    --cor-fundo: #0a0a0a;
+    --cor-fundo-card: rgba(30, 30, 30, 0.95);
+    --gradiente-dourado: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+    --cor-dourado-solido: #D4AF37;
+    --brilho-dourado: 0 0 20px rgba(212, 175, 55, 0.2);
+    --texto-principal: #e0e0e0;
 }
 
-/* Estilo dos Cards de Configuração */
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+
+body {
+    background-color: var(--cor-fundo);
+    color: var(--texto-principal);
+    overflow-x: hidden; /* Evita barra de rolagem lateral */
+}
+
+/* --- ESTRUTURA DE LAYOUT (O QUE CORRIGE A FOTO) --- */
+
+/* O Container principal agora centraliza e dá o respiro necessário */
+.container-principal {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    padding-bottom: 100px; /* Espaço para não cobrir o conteúdo */
+}
+
+/* Sidebar Fixa: Para ela NÃO empurrar o conteúdo para o lado */
+.sidebar {
+    position: fixed; 
+    top: 0; 
+    left: -280px; 
+    width: 280px; 
+    height: 100%;
+    background: rgba(15,15,15,0.98); 
+    backdrop-filter: blur(20px); 
+    z-index: 5000; /* Garante que fica acima de tudo */
+    transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 30px;
+    border-right: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.sidebar.aberto { left: 0; box-shadow: 10px 0 50px rgba(0,0,0,0.9); }
+
+.overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8); z-index: 4000; display: none; backdrop-filter: blur(5px);
+}
+.overlay.aberto { display: block; }
+
+/* --- CARDS E ELEMENTOS --- */
+
 .card-admin {
     background: var(--cor-fundo-card);
-    backdrop-filter: blur(15px);
     border: 1px solid rgba(212, 175, 55, 0.2);
     border-radius: 20px;
     padding: 20px;
@@ -20,57 +63,76 @@
 
 .titulo-card {
     font-size: 0.9rem;
+    color: var(--cor-dourado-solido);
+    text-transform: uppercase;
+    font-weight: bold;
     margin-bottom: 20px;
     border-bottom: 1px solid rgba(212, 175, 55, 0.1);
     padding-bottom: 10px;
 }
 
-/* Grid de 3 colunas para os horários (Abre, Fecha, Intervalo) */
+/* --- INPUTS PREMIUM --- */
+
+input, select {
+    width: 100%; 
+    padding: 14px; 
+    background: rgba(0,0,0,0.3); 
+    border: 1px solid #333;
+    color: white; 
+    border-radius: 10px; 
+    margin-bottom: 15px; 
+    font-size: 1rem;
+}
+
+input:focus { border-color: var(--cor-dourado-solido); outline: none; }
+
 .grid-inputs-3 {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 12px;
 }
 
-/* Botão de Ação Secundária (Bordas douradas, fundo escuro) */
-.btn-acao-secundaria {
-    width: 100%;
-    padding: 14px;
-    background: rgba(0,0,0,0.5);
-    border: 1px solid var(--cor-dourado-solido);
-    color: var(--cor-dourado-solido);
-    border-radius: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 0.8rem;
-    letter-spacing: 1px;
-}
+/* --- BOTÕES --- */
 
-/* O Botão Master de Salvar (Dourado Metálico) */
 .btn-salvar-master {
     width: 100%;
-    padding: 20px;
+    padding: 18px;
     background: var(--gradiente-dourado);
     border: none;
-    border-radius: 15px;
+    border-radius: 12px;
     color: #000;
-    font-weight: 900;
-    font-size: 1.1rem;
+    font-weight: 800;
+    font-size: 1rem;
     text-transform: uppercase;
-    box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
-    margin-top: 10px;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
 }
 
-/* Ajuste para os itens de serviço na lista de configuração */
-.item-servico-config input, .item-servico-config select {
-    margin-bottom: 0 !important; /* Remove o espaço extra dos inputs dentro da lista */
-    font-size: 0.85rem;
-    padding: 10px;
+.btn-acao-secundaria {
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    border: 1px solid var(--cor-dourado-solido);
+    color: var(--cor-dourado-solido);
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
 }
 
-/* Estilo para telas mobile bem pequenas */
-@media (max-width: 400px) {
-    .grid-inputs-3 {
-        grid-template-columns: 1fr; /* Empilha os horários se a tela for muito estreita */
-    }
+/* Modal de Login */
+#modal-login {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: #000; z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.login-box {
+    background: #111; padding: 30px; border-radius: 20px;
+    width: 90%; max-width: 350px; text-align: center;
+    border: 1px solid var(--cor-dourado-solido);
+}
+
+/* Ajuste Mobile */
+@media (max-width: 450px) {
+    .grid-inputs-3 { grid-template-columns: 1fr; }
 }
